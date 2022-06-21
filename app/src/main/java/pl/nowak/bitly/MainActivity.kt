@@ -20,12 +20,11 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.core.view.children
-import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.YAxis.AxisDependency
-import com.github.mikephil.charting.data.Entry
-import com.github.mikephil.charting.data.LineData
-import com.github.mikephil.charting.data.LineDataSet
+import com.github.mikephil.charting.data.BarEntry
+import com.github.mikephil.charting.data.BarData
+import com.github.mikephil.charting.charts.BarChart
+import com.github.mikephil.charting.data.BarDataSet
 import com.github.mikephil.charting.utils.ColorTemplate
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
@@ -38,7 +37,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var slDevices: LinearLayout
     private lateinit var bluetoothManager: BluetoothManager
     private lateinit var bluetoothAdapter: BluetoothAdapter
-    private lateinit var chart: LineChart
+    private lateinit var chart: BarChart
+    private lateinit var chartBER: BarChart
     private var devicesMap: HashMap<Int, BluetoothDevice> = hashMapOf<Int, BluetoothDevice>()
 
 
@@ -60,10 +60,10 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun setData(count: Int, range: Double) {
+    private fun setData(count: Int, range: Double) : BarData {
         // now in hours
         val now: Long = TimeUnit.MILLISECONDS.toHours(System.currentTimeMillis())
-        val values: ArrayList<Entry> = ArrayList()
+        val values: ArrayList<BarEntry> = ArrayList()
 
         // count = hours
         val to = (now + count).toFloat()
@@ -72,30 +72,25 @@ class MainActivity : AppCompatActivity() {
         var x = now.toFloat()
         while (x < to) {
             val y: Double = Random.nextDouble(range, 50.0)
-            values.add(Entry(x, y.toFloat())) // add one entry per hour
+            values.add(BarEntry(x, y.toFloat())) // add one entry per hour
             x++
         }
 
         // create a dataset and give it a type
-        val set1 = LineDataSet(values, "DataSet 1")
+        val set1 = BarDataSet(values, "DataSet 1")
         set1.axisDependency = AxisDependency.LEFT
         set1.color = ColorTemplate.getHoloBlue()
         set1.valueTextColor = ColorTemplate.getHoloBlue()
-        set1.lineWidth = 1.5f
-        set1.setDrawCircles(false)
         set1.setDrawValues(false)
-        set1.fillAlpha = 65
-        set1.fillColor = ColorTemplate.getHoloBlue()
         set1.highLightColor = Color.rgb(244, 117, 117)
-        set1.setDrawCircleHole(false)
 
         // create a data object with the data sets
-        val data = LineData(set1)
+        val data = BarData(set1)
         data.setValueTextColor(Color.WHITE)
         data.setValueTextSize(9f)
 
         // set data
-        chart.setData(data)
+        return data
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -105,28 +100,34 @@ class MainActivity : AppCompatActivity() {
         enableBle()
 
         // in this example, a LineChart is initialized from xml
-        chart = findViewById<View>(R.id.chartRX) as LineChart
-
-        // no description text
-        chart.getDescription().setEnabled(false);
+        chart = findViewById<View>(R.id.chartRX) as BarChart
 
         // enable touch gestures
         chart.setTouchEnabled(true);
 
-        chart.setDragDecelerationFrictionCoef(0.9f);
-
         // enable scaling and dragging
         chart.setDragEnabled(true);
         chart.setScaleEnabled(true);
-        chart.setDrawGridBackground(false);
         chart.setHighlightPerDragEnabled(true);
 
         // set an alternative background color
-        chart.setBackgroundColor(Color.WHITE);
-        chart.setViewPortOffsets(0f, 0f, 0f, 0f);
+        val data = setData(20, 0.3)
+        chart.setData(data)
 
-        setData(20, 0.3)
 
+        // in this example, a LineChart is initialized from xml
+        chartBER = findViewById<View>(R.id.chartBER) as BarChart
+
+        // enable touch gestures
+        chartBER.setTouchEnabled(true);
+
+        // enable scaling and dragging
+        chartBER.setDragEnabled(true);
+        chartBER.setScaleEnabled(true);
+        chartBER.setHighlightPerDragEnabled(true);
+
+        // set an alternative background color
+        chartBER.data = setData(20, 0.3)
     }
 
     override fun onDestroy() {
@@ -246,7 +247,7 @@ class MainActivity : AppCompatActivity() {
             addDeviceToView(device)
         }
 
-        btScan = this.findViewById(R.id.scan_Button)
+        btScan = this.findViewById(R.id.clear_Button)
         btScan.setOnClickListener {
             Toast.makeText(this, "Scanning started", Toast.LENGTH_LONG).show()
 

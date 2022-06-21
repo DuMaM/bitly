@@ -14,9 +14,11 @@
         android:layout_marginTop="16dp"
         android:layout_marginEnd="24dp"
         android:contextClickable="true"
+        app:flow_maxElementsWrap="3"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHeight_max="96dp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/scan_Button">
+        app:layout_constraintTop_toBottomOf="@+id/clear_Button">
 
         <LinearLayout
             android:id="@+id/devicesHolder_Linear"
@@ -34,16 +36,28 @@
         </LinearLayout>
     </ScrollView>
 
+
     <Button
         android:id="@+id/scan_Button"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="24dp"
         android:layout_marginEnd="24dp"
         android:text="@string/btn_Scan"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/clear_Button"
         app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/clear_Button"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:layout_marginEnd="24dp"
+        android:text="@string/btn_Clear"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/scan_Button"
         app:layout_constraintTop_toTopOf="parent" />
 
     <ScrollView
@@ -53,23 +67,36 @@
         android:layout_marginTop="16dp"
         android:layout_marginEnd="24dp"
         android:layout_marginBottom="16dp"
-        android:contentDescription="It's a place where all graphs are located"
+        app:flow_maxElementsWrap="2"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHeight_max="wrap"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/devicesHolder_View">
+        app:layout_constraintTop_toBottomOf="@+id/devicesHolder_View"
+        app:layout_constraintVertical_bias="0.48000002"
+        app:layout_constraintWidth_max="wrap">
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
             android:orientation="vertical">
 
-            <com.github.mikephil.charting.charts.LineChart
+            <com.github.mikephil.charting.charts.BarChart
                 android:id="@+id/chartRX"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent">
+                android:layout_height="200dp"
+                android:layout_weight="24">
 
-            </com.github.mikephil.charting.charts.LineChart>
+            </com.github.mikephil.charting.charts.BarChart>
+
+            <com.github.mikephil.charting.charts.BarChart
+                android:id="@+id/chartBER"
+                android:layout_width="match_parent"
+                android:layout_height="200dp"
+                android:layout_weight="24">
+
+            </com.github.mikephil.charting.charts.BarChart>
         </LinearLayout>
     </ScrollView>
 
