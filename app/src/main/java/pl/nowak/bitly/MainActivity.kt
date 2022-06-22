@@ -34,6 +34,7 @@ import kotlin.random.Random
 class MainActivity : AppCompatActivity() {
 
     private lateinit var btScan: Button
+    private lateinit var btClear: Button
     private lateinit var slDevices: LinearLayout
     private lateinit var bluetoothManager: BluetoothManager
     private lateinit var bluetoothAdapter: BluetoothAdapter
@@ -239,23 +240,29 @@ class MainActivity : AppCompatActivity() {
 
     private fun initBleList() {
         slDevices = findViewById(R.id.devicesHolder_Linear)
-        slDevices.removeAllViews()
-        devicesMap.clear()
 
-        Timber.i("Loading bounded devices on list")
-        bluetoothAdapter.bondedDevices.forEach { device ->
-            addDeviceToView(device)
-        }
-
-        btScan = this.findViewById(R.id.clear_Button)
+        btScan = this.findViewById(R.id.scan_Button)
         btScan.setOnClickListener {
-            Toast.makeText(this, "Scanning started", Toast.LENGTH_LONG).show()
+
+            Timber.i("Loading bounded devices on list")
+            bluetoothAdapter.bondedDevices.forEach { device ->
+                addDeviceToView(device)
+            }
 
             // https://developer.android.com/reference/android/bluetooth/BluetoothAdapter#startDiscovery()
-            bluetoothAdapter.cancelDiscovery()
-            if (bluetoothAdapter.startDiscovery()) {
-                Timber.i("Looking for devices")
+            Timber.i("Looking for devices")
+            if (!bluetoothAdapter.isDiscovering()) {
+                bluetoothAdapter.startDiscovery()
+                Toast.makeText(this, "Scanning started", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this, "Scanning is still in progress", Toast.LENGTH_SHORT).show()
             }
+        }
+
+        btClear = this.findViewById(R.id.clear_Button)
+        btClear.setOnClickListener {
+            slDevices.removeAllViews()
+            devicesMap.clear()
         }
     }
 }
