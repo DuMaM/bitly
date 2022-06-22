@@ -39,7 +39,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var bluetoothAdapter: BluetoothAdapter
     private lateinit var chart: BarChart
     private lateinit var chartBER: BarChart
-    private var devicesMap: HashMap<Int, BluetoothDevice> = hashMapOf<Int, BluetoothDevice>()
+    private var devicesMap: HashMap<Int, BluetoothDevice> = hashMapOf()
 
 
     private val MULTIPLE_PERMISSIONS = 100
@@ -103,15 +103,15 @@ class MainActivity : AppCompatActivity() {
         chart = findViewById<View>(R.id.chartRX) as BarChart
 
         // enable touch gestures
-        chart.setTouchEnabled(true);
+        chart.setTouchEnabled(true)
 
         // enable scaling and dragging
-        chart.setDragEnabled(true);
-        chart.setScaleEnabled(true);
-        chart.setHighlightPerDragEnabled(true);
+        chart.isDragEnabled = true
+        chart.setScaleEnabled(true)
+        chart.isHighlightPerDragEnabled = true
 
         // set an alternative background color
-        val data = setData(20, 0.3)
+        val data = setData(20, 0.4)
         chart.setData(data)
 
 
@@ -119,15 +119,15 @@ class MainActivity : AppCompatActivity() {
         chartBER = findViewById<View>(R.id.chartBER) as BarChart
 
         // enable touch gestures
-        chartBER.setTouchEnabled(true);
+        chartBER.setTouchEnabled(true)
 
         // enable scaling and dragging
-        chartBER.setDragEnabled(true);
-        chartBER.setScaleEnabled(true);
-        chartBER.setHighlightPerDragEnabled(true);
+        chartBER.isDragEnabled = true
+        chartBER.setScaleEnabled(true)
+        chartBER.isHighlightPerDragEnabled = true
 
         // set an alternative background color
-        chartBER.data = setData(20, 0.3)
+        chartBER.data = setData(30, 0.3)
     }
 
     override fun onDestroy() {
