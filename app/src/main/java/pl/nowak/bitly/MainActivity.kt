@@ -168,7 +168,11 @@ class MainActivity : AppCompatActivity() {
         }
 
         devicesMap[device.address] = device
-        spDevicesArray.add(device.address)
+        var display: String = device.address
+        if (device.name != null) {
+            display += ": " + device.name
+        }
+        spDevicesArray.add(display)
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>,
