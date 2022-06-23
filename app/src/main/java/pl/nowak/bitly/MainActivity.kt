@@ -13,18 +13,15 @@ import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.view.View
-import android.widget.Button
-import android.widget.LinearLayout
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.github.mikephil.charting.components.YAxis.AxisDependency
-import com.github.mikephil.charting.data.BarEntry
-import com.github.mikephil.charting.data.BarData
 import com.github.mikephil.charting.charts.BarChart
+import com.github.mikephil.charting.components.YAxis.AxisDependency
+import com.github.mikephil.charting.data.BarData
 import com.github.mikephil.charting.data.BarDataSet
+import com.github.mikephil.charting.data.BarEntry
 import com.github.mikephil.charting.utils.ColorTemplate
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
@@ -35,15 +32,19 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var btScan: Button
     private lateinit var btClear: Button
-    private lateinit var slDevices: LinearLayout
+    private lateinit var btConnect: Button
+
+    private lateinit var spDevices: Spinner
+    private lateinit var spDevicesArray: ArrayAdapter<String>
+    private var devicesMap: HashMap<String, BluetoothDevice> = hashMapOf()
+
+    private val multiplePermissions: Int = 100
     private lateinit var bluetoothManager: BluetoothManager
     private lateinit var bluetoothAdapter: BluetoothAdapter
+
     private lateinit var chart: BarChart
     private lateinit var chartBER: BarChart
-    private var devicesMap: HashMap<Int, BluetoothDevice> = hashMapOf()
 
-
-    private val MULTIPLE_PERMISSIONS = 100
 
     // add async pulling of discovery requests
     // https://developer.android.com/guide/topics/connectivity/bluetooth/find-bluetooth-devices
@@ -97,7 +98,6 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
         enableBle()
 
         // in this example, a LineChart is initialized from xml
@@ -114,7 +114,6 @@ class MainActivity : AppCompatActivity() {
         // set an alternative background color
         val data = setData(20, 0.4)
         chart.setData(data)
-
 
         // in this example, a LineChart is initialized from xml
         chartBER = findViewById<View>(R.id.chartBER) as BarChart
@@ -164,29 +163,19 @@ class MainActivity : AppCompatActivity() {
 
 
     private fun addDeviceToView(device: BluetoothDevice) {
-        if (devicesMap.containsKey(device.hashCode())) {
+        if (devicesMap.containsKey(device.address)) {
             return
         }
 
-        val params = LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.WRAP_CONTENT,
-            LinearLayout.LayoutParams.WRAP_CONTENT,
-        )
-        params.setMargins(8, 8, 8, 8)
-
-        val textView = TextView(this)
-        textView.layoutParams = params
-        textView.text = device.name + ":" + device.address
-
-        devicesMap[device.hashCode()] = device
-        slDevices.addView(textView, params)
+        devicesMap[device.address] = device
+        spDevicesArray.add(device.address)
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>,
                                             grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         when (requestCode) {
-            MULTIPLE_PERMISSIONS -> {
+            multiplePermissions -> {
                 if (grantResults.isEmpty()) {
                     Timber.w("Not granted access")
                     return
@@ -213,13 +202,13 @@ class MainActivity : AppCompatActivity() {
                         Manifest.permission.BLUETOOTH_ADMIN,
                         Manifest.permission.ACCESS_FINE_LOCATION,
                         Manifest.permission.BLUETOOTH_SCAN,
-                        Manifest.permission.BLUETOOTH_CONNECT), MULTIPLE_PERMISSIONS)
+                        Manifest.permission.BLUETOOTH_CONNECT), multiplePermissions)
             } else {
                 Timber.d("Requesting permissions for app BLE location and admin")
                 requestPermissions(
                     arrayOf(
                         Manifest.permission.BLUETOOTH_ADMIN,
-                        Manifest.permission.ACCESS_FINE_LOCATION), MULTIPLE_PERMISSIONS)
+                        Manifest.permission.ACCESS_FINE_LOCATION), multiplePermissions)
             }
         }
 
@@ -239,11 +228,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initBleList() {
-        slDevices = findViewById(R.id.devicesHolder_Linear)
+        // init device linear layout
+        spDevicesArray = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, ArrayList<String>() )
+        spDevices = findViewById(R.id.spDevicesView)
+        spDevices.setAdapter(spDevicesArray)
+        spDevices.setVisibility(View.VISIBLE)
 
-        btScan = this.findViewById(R.id.scan_Button)
+        btScan = this.findViewById(R.id.btScanView)
         btScan.setOnClickListener {
-
             Timber.i("Loading bounded devices on list")
             bluetoothAdapter.bondedDevices.forEach { device ->
                 addDeviceToView(device)
@@ -251,7 +243,7 @@ class MainActivity : AppCompatActivity() {
 
             // https://developer.android.com/reference/android/bluetooth/BluetoothAdapter#startDiscovery()
             Timber.i("Looking for devices")
-            if (!bluetoothAdapter.isDiscovering()) {
+            if (!bluetoothAdapter.isDiscovering) {
                 bluetoothAdapter.startDiscovery()
                 Toast.makeText(this, "Scanning started", Toast.LENGTH_SHORT).show()
             } else {
@@ -259,10 +251,17 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        btClear = this.findViewById(R.id.clear_Button)
+        btClear = this.findViewById(R.id.btCleanView)
         btClear.setOnClickListener {
-            slDevices.removeAllViews()
+            bluetoothAdapter.cancelDiscovery()
+            spDevicesArray.clear()
             devicesMap.clear()
+        }
+
+        btConnect = this.findViewById(R.id.btConnectView)
+        btConnect.setOnClickListener {
+            val deviceName: String = spDevices.getSelectedItem().toString()
+            Toast.makeText(this, "Connecting to " + deviceName, Toast.LENGTH_SHORT).show()
         }
     }
 }

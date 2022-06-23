@@ -6,65 +6,59 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <ScrollView
-        android:id="@+id/devicesHolder_View"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="24dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="24dp"
-        android:contextClickable="true"
-        app:flow_maxElementsWrap="3"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHeight_max="96dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/clear_Button">
-
-        <LinearLayout
-            android:id="@+id/devicesHolder_Linear"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:contextClickable="true"
-            android:orientation="vertical"
-            tools:text="Show only in IDE preview">
-
-            <TextView
-                android:id="@+id/textView"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="TextView" />
-        </LinearLayout>
-    </ScrollView>
-
 
     <Button
-        android:id="@+id/scan_Button"
+        android:id="@+id/btScanView"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
         android:layout_marginTop="24dp"
-        android:layout_marginEnd="24dp"
-        android:text="@string/btn_Scan"
-        app:layout_constraintEnd_toStartOf="@+id/clear_Button"
+        android:layout_marginEnd="8dp"
+        android:text="@string/btnScanView"
+        app:layout_constraintEnd_toStartOf="@+id/btCleanView"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <Button
-        android:id="@+id/clear_Button"
+        android:id="@+id/btCleanView"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="24dp"
+        android:layout_marginEnd="8dp"
+        android:text="@string/btnClearView"
+        app:layout_constraintEnd_toStartOf="@+id/btConnectView"
+        app:layout_constraintStart_toEndOf="@+id/btScanView"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/btConnectView"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
         android:layout_marginTop="24dp"
         android:layout_marginEnd="24dp"
-        android:text="@string/btn_Clear"
+        android:text="@string/btnConnectView"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/scan_Button"
+        app:layout_constraintStart_toEndOf="@+id/btCleanView"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <Spinner
+        android:id="@+id/spDevicesView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="24dp"
+        android:layout_marginEnd="24dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btScanView" />
 
     <ScrollView
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginStart="24dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="24dp"
         android:layout_marginEnd="24dp"
         android:layout_marginBottom="16dp"
         app:flow_maxElementsWrap="2"
@@ -72,13 +66,12 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHeight_max="wrap"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/devicesHolder_View"
-        app:layout_constraintVertical_bias="0.48000002"
+        app:layout_constraintTop_toBottomOf="@+id/spDevicesView"
         app:layout_constraintWidth_max="wrap">
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:gravity="center_vertical"
             android:orientation="vertical">
 
