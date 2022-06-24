@@ -4,6 +4,7 @@ import android.Manifest
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothManager
+import android.bluetooth.BluetoothSocket
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -24,7 +25,11 @@ import com.github.mikephil.charting.data.BarDataSet
 import com.github.mikephil.charting.data.BarEntry
 import com.github.mikephil.charting.utils.ColorTemplate
 import timber.log.Timber
+import java.io.IOException
+import java.util.*
 import java.util.concurrent.TimeUnit
+import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
 import kotlin.random.Random
 
 
@@ -44,6 +49,11 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var chart: BarChart
     private lateinit var chartBER: BarChart
+    
+    private var deviceUUID: UUID = UUID.nameUUIDFromBytes(byteArrayOf(0xBB.toByte(), 0x4A,
+        0xFF.toByte(), 0x4F,
+        0xAD.toByte(), 0x03, 0x41, 0x5D, 0xA9.toByte(), 0x6C,
+        0x9D.toByte(), 0x6C, 0xDD.toByte(), 0xDA.toByte(), 0x83.toByte(), 0x04))
 
 
     // add async pulling of discovery requests
@@ -136,7 +146,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun enableBle() {
-        bluetoothManager = applicationContext.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+        bluetoothManager = applicationContext.getSystemService(BLUETOOTH_SERVICE) as BluetoothManager
         bluetoothAdapter = bluetoothManager.adapter
         Timber.i("There is possibility to use bluetooth")
 
@@ -163,16 +173,17 @@ class MainActivity : AppCompatActivity() {
 
 
     private fun addDeviceToView(device: BluetoothDevice) {
-        if (devicesMap.containsKey(device.address)) {
-            return
-        }
-
-        devicesMap[device.address] = device
         var display: String = device.address
         if (device.name != null) {
             display += ": " + device.name
         }
+
+        if (devicesMap.containsKey(display)) {
+            return
+        }
+
         spDevicesArray.add(display)
+        devicesMap[display] = device
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>,
@@ -265,7 +276,21 @@ class MainActivity : AppCompatActivity() {
         btConnect = this.findViewById(R.id.btConnectView)
         btConnect.setOnClickListener {
             val deviceName: String = spDevices.getSelectedItem().toString()
-            Toast.makeText(this, "Connecting to " + deviceName, Toast.LENGTH_SHORT).show()
+            var device: BluetoothDevice? = devicesMap[deviceName]
+            if (device != null) {
+                // it's not allowed to discover and connect
+                bluetoothAdapter.cancelDiscovery()
+
+                var mSocket: BluetoothSocket = device.createRfcommSocketToServiceRecord(deviceUUID)
+                Toast.makeText(this, "Connecting to " + device.address, Toast.LENGTH_SHORT).show()
+                try {
+                    mSocket.connect()
+                } catch (e: IOException) {
+                    var errorMsg = "Connection Failed with error: $e"
+                    Timber.e(errorMsg)
+                    Toast.makeText(this, errorMsg, Toast.LENGTH_SHORT).show()
+                }
+            }
         }
     }
 }
