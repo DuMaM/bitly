@@ -105,10 +105,7 @@ class MainActivity : AppCompatActivity() {
         return data
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-        enableBle()
+    private fun initGraphs() {
 
         // in this example, a LineChart is initialized from xml
         chart = findViewById<View>(R.id.chartRX) as BarChart
@@ -138,6 +135,14 @@ class MainActivity : AppCompatActivity() {
 
         // set an alternative background color
         chartBER.data = setData(30, 0.3)
+
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+        enableBle()
+        initGraphs()
     }
 
     override fun onDestroy() {
