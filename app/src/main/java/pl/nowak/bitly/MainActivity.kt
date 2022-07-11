@@ -3,18 +3,20 @@ package pl.nowak.bitly
 import android.Manifest
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
+import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothManager
-import android.bluetooth.BluetoothSocket
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
+import android.bluetooth.le.*
+import android.content.*
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.IBinder
+import android.util.Log
 import android.view.View
 import android.widget.*
+import android.widget.ExpandableListView.OnChildClickListener
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -25,11 +27,7 @@ import com.github.mikephil.charting.data.BarDataSet
 import com.github.mikephil.charting.data.BarEntry
 import com.github.mikephil.charting.utils.ColorTemplate
 import timber.log.Timber
-import java.io.IOException
-import java.util.*
 import java.util.concurrent.TimeUnit
-import kotlin.collections.ArrayList
-import kotlin.collections.HashMap
 import kotlin.random.Random
 
 
@@ -46,15 +44,95 @@ class MainActivity : AppCompatActivity() {
     private val multiplePermissions: Int = 100
     private lateinit var bluetoothManager: BluetoothManager
     private lateinit var bluetoothAdapter: BluetoothAdapter
+    private lateinit var bluetoothLeScanner: BluetoothLeScanner
 
     private lateinit var chart: BarChart
     private lateinit var chartBER: BarChart
-    
-    private var deviceUUID: UUID = UUID.nameUUIDFromBytes(byteArrayOf(0xBB.toByte(), 0x4A,
-        0xFF.toByte(), 0x4F,
-        0xAD.toByte(), 0x03, 0x41, 0x5D, 0xA9.toByte(), 0x6C,
-        0x9D.toByte(), 0x6C, 0xDD.toByte(), 0xDA.toByte(), 0x83.toByte(), 0x04))
 
+    val EXTRAS_DEVICE_NAME = "DEVICE_NAME"
+    val EXTRAS_DEVICE_ADDRESS = "DEVICE_ADDRESS"
+
+    private val mConnectionState: TextView? = null
+    private val mDataField: TextView? = null
+    private var mDeviceName: String? = null
+    private var mDeviceAddress: String? = null
+    private val mGattServicesList: ExpandableListView? = null
+    private var mBluetoothLeService: BluetoothLeService? = null
+    private val mGattCharacteristics = ArrayList<ArrayList<BluetoothGattCharacteristic>>()
+    private var mConnected = false
+    private var mNotifyCharacteristic: BluetoothGattCharacteristic? = null
+
+    private val LIST_NAME = "NAME"
+    private val LIST_UUID = "UUID"
+
+    // Code to manage Service lifecycle.
+    private val mServiceConnection: ServiceConnection = object : ServiceConnection {
+        override fun onServiceConnected(componentName: ComponentName, service: IBinder) {
+            mBluetoothLeService = (service as BluetoothLeService.LocalBinder).service
+            if (!mBluetoothLeService!!.initialize()) {
+                Timber.e("Unable to initialize Bluetooth")
+                finish()
+            }
+
+            mBluetoothLeService!!.startAdv()
+        }
+
+        override fun onServiceDisconnected(componentName: ComponentName) {
+            mBluetoothLeService = null
+        }
+    }
+
+    // Handles various events fired by the Service.
+    // ACTION_GATT_CONNECTED: connected to a GATT server.
+    // ACTION_GATT_DISCONNECTED: disconnected from a GATT server.
+    // ACTION_GATT_SERVICES_DISCOVERED: discovered GATT services.
+    // ACTION_DATA_AVAILABLE: received data from the device.  This can be a result of read
+    //                        or notification operations.
+    private val mGattUpdateReceiver: BroadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            val action = intent.action
+            if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(action)) {
+                mConnected = true
+                //updateConnectionState(R.string.connected)
+            } else if (BluetoothLeService.ACTION_GATT_DISCONNECTED.equals(action)) {
+                mConnected = false
+                //updateConnectionState(R.string.disconnected)
+              //  clearUI()
+            } else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
+                // Show all the supported services and characteristics on the user interface.
+               // displayGattServices(mBluetoothLeService.getSupportedGattServices())
+            } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
+               // displayData(intent.getStringExtra(BluetoothLeService.EXTRA_DATA))
+            }
+        }
+    }
+
+    // If a given GATT characteristic is selected, check for supported features.  This sample
+    // demonstrates 'Read' and 'Notify' features.  See
+    // http://d.android.com/reference/android/bluetooth/BluetoothGatt.html for the complete
+    // list of supported characteristic features.
+    private val servicesListClickListner = OnChildClickListener { parent, v, groupPosition, childPosition, id ->
+            if (mGattCharacteristics != null) {
+                val characteristic: BluetoothGattCharacteristic =
+                    mGattCharacteristics.get(groupPosition).get(childPosition)
+                val charaProp = characteristic.properties
+                if (charaProp or BluetoothGattCharacteristic.PROPERTY_READ > 0) {
+                    // If there is an active notification on a characteristic, clear
+                    // it first so it doesn't update the data field on the user interface.
+                    if (mNotifyCharacteristic != null) {
+                        mBluetoothLeService?.setCharacteristicNotification(mNotifyCharacteristic!!, false)
+                        mNotifyCharacteristic = null
+                    }
+                    mBluetoothLeService?.readCharacteristic(characteristic)
+                }
+                if (charaProp or BluetoothGattCharacteristic.PROPERTY_NOTIFY > 0) {
+                    mNotifyCharacteristic = characteristic
+                    mBluetoothLeService?.setCharacteristicNotification(characteristic, true)
+                }
+                return@OnChildClickListener true
+            }
+            false
+        }
 
     // add async pulling of discovery requests
     // https://developer.android.com/guide/topics/connectivity/bluetooth/find-bluetooth-devices
@@ -143,6 +221,12 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         enableBle()
         initGraphs()
+
+        mDeviceName = intent.getStringExtra(EXTRAS_DEVICE_NAME)
+        mDeviceAddress = intent.getStringExtra(EXTRAS_DEVICE_ADDRESS)
+
+        val gattServiceIntent = Intent(this, BluetoothLeService::class.java)
+        bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE)
     }
 
     override fun onDestroy() {
@@ -153,6 +237,8 @@ class MainActivity : AppCompatActivity() {
     private fun enableBle() {
         bluetoothManager = applicationContext.getSystemService(BLUETOOTH_SERVICE) as BluetoothManager
         bluetoothAdapter = bluetoothManager.adapter
+        bluetoothLeScanner = bluetoothAdapter.bluetoothLeScanner
+
         Timber.i("There is possibility to use bluetooth")
 
         checkBlePermission()
@@ -221,6 +307,7 @@ class MainActivity : AppCompatActivity() {
                     arrayOf(
                         Manifest.permission.BLUETOOTH_ADMIN,
                         Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.BLUETOOTH_ADVERTISE,
                         Manifest.permission.BLUETOOTH_SCAN,
                         Manifest.permission.BLUETOOTH_CONNECT), multiplePermissions)
             } else {
@@ -234,11 +321,13 @@ class MainActivity : AppCompatActivity() {
 
         if ((ContextCompat.checkSelfPermission(this@MainActivity, Manifest.permission.BLUETOOTH_ADMIN) +
             ContextCompat.checkSelfPermission(this@MainActivity, Manifest.permission.BLUETOOTH_CONNECT) +
+                    ContextCompat.checkSelfPermission(this@MainActivity, Manifest.permission.BLUETOOTH_ADVERTISE) +
             ContextCompat.checkSelfPermission(this@MainActivity, Manifest.permission.ACCESS_FINE_LOCATION))
                 != PackageManager.PERMISSION_GRANTED) {
 
             if (ActivityCompat.shouldShowRequestPermissionRationale(this@MainActivity, Manifest.permission.BLUETOOTH_ADMIN) ||
                 ActivityCompat.shouldShowRequestPermissionRationale(this@MainActivity, Manifest.permission.BLUETOOTH_CONNECT) ||
+                ActivityCompat.shouldShowRequestPermissionRationale(this@MainActivity, Manifest.permission.BLUETOOTH_ADVERTISE) ||
                 ActivityCompat.shouldShowRequestPermissionRationale(this@MainActivity, Manifest.permission.ACCESS_FINE_LOCATION)) {
                 permRequest()
             } else {
@@ -247,33 +336,64 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private var scanning = false
+    private val handler: Handler = Handler()
+
+    // Stops scanning after 10 seconds.
+    private val SCAN_PERIOD: Long = 10000
+
+    private val leScanCallback: ScanCallback = object : ScanCallback() {
+        override fun onScanResult(callbackType: Int, result: ScanResult) {
+            super.onScanResult(callbackType, result)
+            addDeviceToView(result.getDevice())
+        }
+    }
+
+    private fun scanLeDevice() {
+        if (!scanning) {
+            // Stops scanning after a predefined scan period.
+            handler.postDelayed(Runnable {
+                scanning = false
+                bluetoothLeScanner.stopScan(leScanCallback)
+            }, SCAN_PERIOD)
+            scanning = true
+            bluetoothLeScanner.startScan(leScanCallback)
+        } else {
+            scanning = false
+            bluetoothLeScanner.stopScan(leScanCallback)
+        }
+    }
+
+
     private fun initBleList() {
         // init device linear layout
-        spDevicesArray = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, ArrayList<String>() )
+        spDevicesArray = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, ArrayList<String>()  )
         spDevices = findViewById(R.id.spDevicesView)
         spDevices.setAdapter(spDevicesArray)
         spDevices.setVisibility(View.VISIBLE)
 
         btScan = this.findViewById(R.id.btScanView)
         btScan.setOnClickListener {
-            Timber.i("Loading bounded devices on list")
-            bluetoothAdapter.bondedDevices.forEach { device ->
-                addDeviceToView(device)
-            }
-
-            // https://developer.android.com/reference/android/bluetooth/BluetoothAdapter#startDiscovery()
-            Timber.i("Looking for devices")
-            if (!bluetoothAdapter.isDiscovering) {
-                bluetoothAdapter.startDiscovery()
-                Toast.makeText(this, "Scanning started", Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(this, "Scanning is still in progress", Toast.LENGTH_SHORT).show()
-            }
+            scanLeDevice()
+//            Timber.i("Loading bounded devices on list")
+//            bluetoothAdapter.bondedDevices.forEach { device ->
+//                addDeviceToView(device)
+//            }
+//
+//            // https://developer.android.com/reference/android/bluetooth/BluetoothAdapter#startDiscovery()
+//            Timber.i("Looking for devices")
+//            if (!bluetoothAdapter.isDiscovering) {
+//                bluetoothAdapter.startDiscovery()
+//                Toast.makeText(this, "Scanning started", Toast.LENGTH_SHORT).show()
+//            } else {
+//                Toast.makeText(this, "Scanning is still in progress", Toast.LENGTH_SHORT).show()
+//            }
         }
 
         btClear = this.findViewById(R.id.btCleanView)
         btClear.setOnClickListener {
-            bluetoothAdapter.cancelDiscovery()
+           // bluetoothAdapter.cancelDiscovery()
+            bluetoothLeScanner.stopScan(leScanCallback)
             spDevicesArray.clear()
             devicesMap.clear()
         }
@@ -281,20 +401,13 @@ class MainActivity : AppCompatActivity() {
         btConnect = this.findViewById(R.id.btConnectView)
         btConnect.setOnClickListener {
             val deviceName: String = spDevices.getSelectedItem().toString()
-            var device: BluetoothDevice? = devicesMap[deviceName]
+            val device: BluetoothDevice? = devicesMap[deviceName]
             if (device != null) {
                 // it's not allowed to discover and connect
-                bluetoothAdapter.cancelDiscovery()
+                //bluetoothAdapter.cancelDiscovery()
+                bluetoothLeScanner.stopScan(leScanCallback)
+                mBluetoothLeService?.connect(device.address)
 
-                var mSocket: BluetoothSocket = device.createRfcommSocketToServiceRecord(deviceUUID)
-                Toast.makeText(this, "Connecting to " + device.address, Toast.LENGTH_SHORT).show()
-                try {
-                    mSocket.connect()
-                } catch (e: IOException) {
-                    var errorMsg = "Connection Failed with error: $e"
-                    Timber.e(errorMsg)
-                    Toast.makeText(this, errorMsg, Toast.LENGTH_SHORT).show()
-                }
             }
         }
     }

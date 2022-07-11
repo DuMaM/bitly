@@ -2,12 +2,12 @@ package pl.nowak.bitly
 
 import android.app.Service
 import android.bluetooth.*
-import android.content.*
+import android.bluetooth.le.*
+import android.content.Intent
 import android.os.Binder
-import android.os.Bundle
 import android.os.IBinder
+import android.os.ParcelUuid
 import android.util.Log
-import androidx.appcompat.app.AppCompatActivity
 import timber.log.Timber
 import java.util.*
 
@@ -23,6 +23,15 @@ class BluetoothLeService : Service() {
     private var mBluetoothGatt: BluetoothGatt? = null
     private var mConnectionState = STATE_DISCONNECTED
 
+    private var currentAdvertisingSet: AdvertisingSet? = null
+    private val mBluetoothAdvertiser = BluetoothAdapter.getDefaultAdapter().bluetoothLeAdvertiser
+    private val mBluetoothAdvParameters = AdvertisingSetParameters.Builder()
+        .setLegacyMode(false) // True by default, but set here as a reminder.
+        .setConnectable(true)
+        .setInterval(AdvertisingSetParameters.INTERVAL_HIGH)
+        .setTxPowerLevel(AdvertisingSetParameters.TX_POWER_MEDIUM)
+        .build()
+
     // Implements callback methods for GATT events that the app cares about.  For example,
     // connection change and services discovered.
     private val mGattCallback: BluetoothGattCallback = object : BluetoothGattCallback() {
@@ -32,16 +41,15 @@ class BluetoothLeService : Service() {
                 intentAction = ACTION_GATT_CONNECTED
                 mConnectionState = STATE_CONNECTED
                 broadcastUpdate(intentAction)
-                Log.i(TAG, "Connected to GATT server.")
+                Timber.i("Connected to GATT server.")
                 // Attempts to discover services after successful connection.
-                Log.i(
-                    TAG, "Attempting to start service discovery:" +
+                Timber.i("Attempting to start service discovery:" +
                             mBluetoothGatt!!.discoverServices()
                 )
             } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
                 intentAction = ACTION_GATT_DISCONNECTED
                 mConnectionState = STATE_DISCONNECTED
-                Log.i(TAG, "Disconnected from GATT server.")
+                Timber.i("Disconnected from GATT server.")
                 broadcastUpdate(intentAction)
             }
         }
@@ -50,7 +58,7 @@ class BluetoothLeService : Service() {
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 broadcastUpdate(ACTION_GATT_SERVICES_DISCOVERED)
             } else {
-                Log.w(TAG, "onServicesDiscovered received: $status")
+                Timber.w( "onServicesDiscovered received: $status")
             }
         }
 
@@ -91,13 +99,13 @@ class BluetoothLeService : Service() {
             var format = -1
             if (flag and 0x01 != 0) {
                 format = BluetoothGattCharacteristic.FORMAT_UINT16
-                Log.d(TAG, "Heart rate format UINT16.")
+                Timber.d( "Heart rate format UINT16.")
             } else {
                 format = BluetoothGattCharacteristic.FORMAT_UINT8
-                Log.d(TAG, "Heart rate format UINT8.")
+                Timber.d( "Heart rate format UINT8.")
             }
             val heartRate = characteristic.getIntValue(format, 1)
-            Log.d(TAG, String.format("Received heart rate: %d", heartRate))
+            Timber.d( String.format("Received heart rate: %d", heartRate))
             intent.putExtra(EXTRA_DATA, heartRate.toString())
         } else {
             // For all other profiles, writes the data formatted in HEX.
@@ -146,13 +154,13 @@ class BluetoothLeService : Service() {
         if (mBluetoothManager == null) {
             mBluetoothManager = getSystemService(BLUETOOTH_SERVICE) as BluetoothManager
             if (mBluetoothManager == null) {
-                Log.e(TAG, "Unable to initialize BluetoothManager.")
+                Timber.e( "Unable to initialize BluetoothManager.")
                 return false
             }
         }
         mBluetoothAdapter = mBluetoothManager!!.adapter
         if (mBluetoothAdapter == null) {
-            Log.e(TAG, "Unable to obtain a BluetoothAdapter.")
+            Timber.e( "Unable to obtain a BluetoothAdapter.")
             return false
         }
         return true
@@ -170,13 +178,13 @@ class BluetoothLeService : Service() {
      */
     fun connect(address: String?): Boolean {
         if (mBluetoothAdapter == null || address == null) {
-            Log.w(TAG, "BluetoothAdapter not initialized or unspecified address.")
+            Timber.w( "BluetoothAdapter not initialized or unspecified address.")
             return false
         }
 
         // Previously connected device.  Try to reconnect.
         if (mBluetoothDeviceAddress != null && address == mBluetoothDeviceAddress && mBluetoothGatt != null) {
-            Log.d(TAG, "Trying to use an existing mBluetoothGatt for connection.")
+            Timber.d( "Trying to use an existing mBluetoothGatt for connection.")
             return if (mBluetoothGatt!!.connect()) {
                 mConnectionState = STATE_CONNECTING
                 true
@@ -186,13 +194,13 @@ class BluetoothLeService : Service() {
         }
         val device = mBluetoothAdapter!!.getRemoteDevice(address)
         if (device == null) {
-            Log.w(TAG, "Device not found.  Unable to connect.")
+            Timber.w( "Device not found.  Unable to connect.")
             return false
         }
         // We want to directly connect to the device, so we are setting the autoConnect
         // parameter to false.
         mBluetoothGatt = device.connectGatt(this, false, mGattCallback)
-        Log.d(TAG, "Trying to create a new connection.")
+        Timber.d( "Trying to create a new connection.")
         mBluetoothDeviceAddress = address
         mConnectionState = STATE_CONNECTING
         return true
@@ -206,7 +214,7 @@ class BluetoothLeService : Service() {
      */
     fun disconnect() {
         if (mBluetoothAdapter == null || mBluetoothGatt == null) {
-            Log.w(TAG, "BluetoothAdapter not initialized")
+            Timber.w( "BluetoothAdapter not initialized")
             return
         }
         mBluetoothGatt!!.disconnect()
@@ -233,7 +241,7 @@ class BluetoothLeService : Service() {
      */
     fun readCharacteristic(characteristic: BluetoothGattCharacteristic?) {
         if (mBluetoothAdapter == null || mBluetoothGatt == null) {
-            Log.w(TAG, "BluetoothAdapter not initialized")
+            Timber.w( "BluetoothAdapter not initialized")
             return
         }
         mBluetoothGatt!!.readCharacteristic(characteristic)
@@ -250,7 +258,7 @@ class BluetoothLeService : Service() {
         enabled: Boolean
     ) {
         if (mBluetoothAdapter == null || mBluetoothGatt == null) {
-            Log.w(TAG, "BluetoothAdapter not initialized")
+            Timber.w( "BluetoothAdapter not initialized")
             return
         }
         mBluetoothGatt!!.setCharacteristicNotification(characteristic, enabled)
@@ -263,24 +271,70 @@ class BluetoothLeService : Service() {
 //        }
     }
 
+    fun startAdv() {
+        // After onAdvertisingSetStarted callback is called, you can modify the
+        // advertising data and scan response data:
+        var mBleData: AdvertiseData? = (AdvertiseData.Builder()).addServiceData(
+            ParcelUuid(
+                UUID_THROUGHTPUT_MEASUREMENT
+            ), "1".toByteArray()).build();
+
+        mBluetoothAdvertiser.startAdvertisingSet(mBluetoothAdvParameters, mBleData, null, null, null, mAdvCallback)
+
+
+        // Can also stop and restart the advertising
+        currentAdvertisingSet?.enableAdvertising(false, 0, 0);
+        // Wait for onAdvertisingEnabled callback...
+        currentAdvertisingSet?.enableAdvertising(true, 60000, 200);
+        // Wait for onAdvertisingEnabled callback...
+
+        // Wait for onScanResponseDataSet callback...
+        mBluetoothAdvertiser.stopAdvertisingSet(mAdvCallback);
+    }
+
+    private val mAdvCallback: AdvertisingSetCallback = object : AdvertisingSetCallback() {
+        override fun onAdvertisingSetStarted(
+            advertisingSet: AdvertisingSet,
+            txPower: Int,
+            status: Int
+        ) {
+            Timber.i("onAdvertisingSetStarted(): txPower:" + txPower + " , status: " + status)
+            currentAdvertisingSet = advertisingSet
+        }
+
+        override fun onAdvertisingDataSet(advertisingSet: AdvertisingSet, status: Int) {
+            Timber.i("onAdvertisingDataSet() :status:$status")
+        }
+
+        override fun onScanResponseDataSet(advertisingSet: AdvertisingSet, status: Int) {
+            Timber.i("onScanResponseDataSet(): status:$status")
+        }
+
+        override fun onAdvertisingSetStopped(advertisingSet: AdvertisingSet) {
+            Timber.i("onAdvertisingSetStopped():")
+        }
+    }
+
+
     /**
      * Retrieves a list of supported GATT services on the connected device. This should be
      * invoked only after `BluetoothGatt#discoverServices()` completes successfully.
      *
      * @return A `List` of supported services.
      */
-    val supportedGattServices: List<BluetoothGattService>?
-        get() = if (mBluetoothGatt == null) null else mBluetoothGatt!!.services
+    fun getSupportedGattServices(): List<BluetoothGattService?>? {
+        return if (mBluetoothGatt == null) null else mBluetoothGatt!!.services
+    }
 
     companion object {
-        private val TAG = BluetoothLeService::class.java.simpleName
+        val TAG = BluetoothLeService::class.java.simpleName
         private const val STATE_DISCONNECTED = 0
         private const val STATE_CONNECTING = 1
         private const val STATE_CONNECTED = 2
+
         const val ACTION_GATT_CONNECTED = "com.example.bluetooth.le.ACTION_GATT_CONNECTED"
         const val ACTION_GATT_DISCONNECTED = "com.example.bluetooth.le.ACTION_GATT_DISCONNECTED"
-        const val ACTION_GATT_SERVICES_DISCOVERED =
-            "com.example.bluetooth.le.ACTION_GATT_SERVICES_DISCOVERED"
+        const val ACTION_GATT_SERVICES_DISCOVERED = "com.example.bluetooth.le.ACTION_GATT_SERVICES_DISCOVERED"
         const val ACTION_DATA_AVAILABLE = "com.example.bluetooth.le.ACTION_DATA_AVAILABLE"
         const val EXTRA_DATA = "com.example.bluetooth.le.EXTRA_DATA"
         val UUID_HEART_RATE_MEASUREMENT = UUID.fromString("00002a37-0000-1000-8000-00805f9b34fb")
