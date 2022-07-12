@@ -1,8 +1,10 @@
 pipeline {
-    docker {
-        image "cimg/android:2022.06.1"
-        args ["--rm", "--interactive"]
-        volumes ["/tmp/:/tmp/"]
+    agent {
+        docker {
+            image "cimg/android:2022.06.1"
+            args ["--rm", "--interactive"]
+            volumes ["/tmp/:/tmp/"]
+        }
     }
 
     stages {
