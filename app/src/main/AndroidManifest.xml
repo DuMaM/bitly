@@ -2,10 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="pl.nowak.bitly">
     <!-- Request legacy Bluetooth permissions on older devices. -->
-    <uses-permission android:name="android.permission.BLUETOOTH"
-        android:maxSdkVersion="31" />
-    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"
-        android:maxSdkVersion="31" />
+    <uses-permission android:name="android.permission.BLUETOOTH" android:required="true" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:required="true" />
 
     <!-- Needed only if your app looks for Bluetooth devices.
          If your app doesn't use Bluetooth scan results to derive physical
@@ -14,10 +12,10 @@
     <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
 
     <!-- Needed only if your app makes the device discoverable to Bluetooth devices. -->
-    <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADVERTISE" android:required="true" />
 
     <!-- Needed only if your app communicates with already-paired Bluetooth devices. -->
-    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" android:required="true" />
 
     <!-- Needed only if your app uses Bluetooth scan results to derive physical location. -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />

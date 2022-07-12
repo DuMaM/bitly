@@ -7,7 +7,6 @@ import android.content.Intent
 import android.os.Binder
 import android.os.IBinder
 import android.os.ParcelUuid
-import android.util.Log
 import timber.log.Timber
 import java.util.*
 
@@ -21,23 +20,30 @@ class BluetoothLeService : Service() {
     private var mBluetoothAdapter: BluetoothAdapter? = null
     private var mBluetoothDeviceAddress: String? = null
     private var mBluetoothGatt: BluetoothGatt? = null
+    private var mBleDataRespons: AdvertiseData = null
     private var mConnectionState = STATE_DISCONNECTED
 
     private var currentAdvertisingSet: AdvertisingSet? = null
     private val mBluetoothAdvertiser = BluetoothAdapter.getDefaultAdapter().bluetoothLeAdvertiser
-    private val mBluetoothAdvParameters = AdvertisingSetParameters.Builder()
-        .setLegacyMode(false) // True by default, but set here as a reminder.
-        .setConnectable(true)
-        .setInterval(AdvertisingSetParameters.INTERVAL_HIGH)
-        .setTxPowerLevel(AdvertisingSetParameters.TX_POWER_MEDIUM)
+    private val mBluetoothAdvParameters: AdvertiseSettings = AdvertiseSettings.Builder()
+        .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY)
+        .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH)
+        .setConnectable(false)
         .build()
+
+//    private val mBluetoothAdvParameters = AdvertisingSetParameters.Builder()
+//        .setLegacyMode(false) // True by default, but set here as a reminder.
+//        .setConnectable(true)
+//        .setInterval(AdvertisingSetParameters.INTERVAL_HIGH)
+//        .setTxPowerLevel(AdvertisingSetParameters.TX_POWER_MEDIUM)
+//        .build()
 
     // Implements callback methods for GATT events that the app cares about.  For example,
     // connection change and services discovered.
     private val mGattCallback: BluetoothGattCallback = object : BluetoothGattCallback() {
         override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
             val intentAction: String
-            if (newState == BluetoothProfile.STATE_CONNECTED) {
+            if (newState == STATE_CONNECTED) {
                 intentAction = ACTION_GATT_CONNECTED
                 mConnectionState = STATE_CONNECTED
                 broadcastUpdate(intentAction)
@@ -46,7 +52,7 @@ class BluetoothLeService : Service() {
                 Timber.i("Attempting to start service discovery:" +
                             mBluetoothGatt!!.discoverServices()
                 )
-            } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+            } else if (newState == STATE_DISCONNECTED) {
                 intentAction = ACTION_GATT_DISCONNECTED
                 mConnectionState = STATE_DISCONNECTED
                 Timber.i("Disconnected from GATT server.")
@@ -274,14 +280,13 @@ class BluetoothLeService : Service() {
     fun startAdv() {
         // After onAdvertisingSetStarted callback is called, you can modify the
         // advertising data and scan response data:
-        var mBleData: AdvertiseData? = (AdvertiseData.Builder()).addServiceData(
-            ParcelUuid(
-                UUID_THROUGHTPUT_MEASUREMENT
-            ), "1".toByteArray()).build();
+        var uuid = ParcelUuid(UUID_THROUGHTPUT_MEASUREMENT)
+        var mBleData: AdvertiseData? = (AdvertiseData.Builder()).addServiceData(uuid, "1".toByteArray()).build();
 
-        mBluetoothAdvertiser.startAdvertisingSet(mBluetoothAdvParameters, mBleData, null, null, null, mAdvCallback)
+        mBluetoothAdvertiser.startAdvertising(mBluetoothAdvParameters, mBleData, mBleDataRespons, mAdvCallback);
+    }
 
-
+    fun stopAdv() {
         // Can also stop and restart the advertising
         currentAdvertisingSet?.enableAdvertising(false, 0, 0);
         // Wait for onAdvertisingEnabled callback...
@@ -289,29 +294,18 @@ class BluetoothLeService : Service() {
         // Wait for onAdvertisingEnabled callback...
 
         // Wait for onScanResponseDataSet callback...
-        mBluetoothAdvertiser.stopAdvertisingSet(mAdvCallback);
+        mBluetoothAdvertiser.stopAdvertising(mAdvCallback);
     }
 
-    private val mAdvCallback: AdvertisingSetCallback = object : AdvertisingSetCallback() {
-        override fun onAdvertisingSetStarted(
-            advertisingSet: AdvertisingSet,
-            txPower: Int,
-            status: Int
-        ) {
-            Timber.i("onAdvertisingSetStarted(): txPower:" + txPower + " , status: " + status)
-            currentAdvertisingSet = advertisingSet
+    private val mAdvCallback: AdvertiseCallback = object : AdvertiseCallback() {
+        override fun onStartSuccess(settingsInEffect: AdvertiseSettings) {
+            super.onStartSuccess(settingsInEffect);
+            Timber.i( "LE Advertise success.");
         }
 
-        override fun onAdvertisingDataSet(advertisingSet: AdvertisingSet, status: Int) {
-            Timber.i("onAdvertisingDataSet() :status:$status")
-        }
-
-        override fun onScanResponseDataSet(advertisingSet: AdvertisingSet, status: Int) {
-            Timber.i("onScanResponseDataSet(): status:$status")
-        }
-
-        override fun onAdvertisingSetStopped(advertisingSet: AdvertisingSet) {
-            Timber.i("onAdvertisingSetStopped():")
+        override fun onStartFailure(errorCode: Int) {
+            Timber.e("Advertising onStartFailure: $errorCode");
+            super.onStartFailure(errorCode);
         }
     }
 
