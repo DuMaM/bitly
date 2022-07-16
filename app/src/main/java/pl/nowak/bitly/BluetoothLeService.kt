@@ -3,10 +3,8 @@ package pl.nowak.bitly
 import android.app.Service
 import android.bluetooth.*
 import android.bluetooth.le.*
-import android.content.Intent
-import android.os.Binder
-import android.os.IBinder
-import android.os.ParcelUuid
+import android.content.*
+import android.os.*
 import timber.log.Timber
 import java.util.*
 
@@ -16,19 +14,38 @@ import java.util.*
  * given Bluetooth LE device.
  */
 class BluetoothLeService : Service() {
-    private var mBluetoothManager: BluetoothManager? = null
-    private var mBluetoothAdapter: BluetoothAdapter? = null
+
+
+    private val mBluetoothManager: BluetoothManager by lazy {
+        getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+    }
+    private val mBluetoothAdapter: BluetoothAdapter by lazy {
+        val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+        bluetoothManager.adapter
+    }
+    private val mBluetoothLEScanner: BluetoothLeScanner by lazy {
+        mBluetoothAdapter.bluetoothLeScanner
+    }
+    private val mBluetoothAdvertiser: BluetoothLeAdvertiser by lazy {
+        mBluetoothAdapter.bluetoothLeAdvertiser
+    }
+
     private var mBluetoothDeviceAddress: String? = null
     private var mBluetoothGatt: BluetoothGatt? = null
-    private var mBleDataRespons: AdvertiseData = null
+
+    //private val mBleDataResponseResponse: AdvertiseData = null
+    //    private val mBleDataResponseResponse: AdvertiseData = AdvertiseData.Builder()
+    //       .setIncludeDeviceName(true)
+    //       .setIncludeTxPowerLevel(true).addServiceData(0x09)
+    //       .build()
     private var mConnectionState = STATE_DISCONNECTED
+    var devicesMap: HashMap<String, BluetoothDevice> = hashMapOf()
 
     private var currentAdvertisingSet: AdvertisingSet? = null
-    private val mBluetoothAdvertiser = BluetoothAdapter.getDefaultAdapter().bluetoothLeAdvertiser
     private val mBluetoothAdvParameters: AdvertiseSettings = AdvertiseSettings.Builder()
         .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY)
         .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH)
-        .setConnectable(false)
+        .setConnectable(true)
         .build()
 
 //    private val mBluetoothAdvParameters = AdvertisingSetParameters.Builder()
@@ -49,7 +66,8 @@ class BluetoothLeService : Service() {
                 broadcastUpdate(intentAction)
                 Timber.i("Connected to GATT server.")
                 // Attempts to discover services after successful connection.
-                Timber.i("Attempting to start service discovery:" +
+                Timber.i(
+                    "Attempting to start service discovery:" +
                             mBluetoothGatt!!.discoverServices()
                 )
             } else if (newState == STATE_DISCONNECTED) {
@@ -64,7 +82,7 @@ class BluetoothLeService : Service() {
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 broadcastUpdate(ACTION_GATT_SERVICES_DISCOVERED)
             } else {
-                Timber.w( "onServicesDiscovered received: $status")
+                Timber.w("onServicesDiscovered received: $status")
             }
         }
 
@@ -102,16 +120,16 @@ class BluetoothLeService : Service() {
         // http://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicViewer.aspx?u=org.bluetooth.characteristic.heart_rate_measurement.xml
         if (UUID_HEART_RATE_MEASUREMENT == characteristic.uuid) {
             val flag = characteristic.properties
-            var format = -1
+            val format: Int
             if (flag and 0x01 != 0) {
                 format = BluetoothGattCharacteristic.FORMAT_UINT16
-                Timber.d( "Heart rate format UINT16.")
+                Timber.d("Heart rate format UINT16.")
             } else {
                 format = BluetoothGattCharacteristic.FORMAT_UINT8
-                Timber.d( "Heart rate format UINT8.")
+                Timber.d("Heart rate format UINT8.")
             }
             val heartRate = characteristic.getIntValue(format, 1)
-            Timber.d( String.format("Received heart rate: %d", heartRate))
+            Timber.d(String.format("Received heart rate: %d", heartRate))
             intent.putExtra(EXTRA_DATA, heartRate.toString())
         } else {
             // For all other profiles, writes the data formatted in HEX.
@@ -136,6 +154,13 @@ class BluetoothLeService : Service() {
     }
 
     override fun onBind(intent: Intent): IBinder? {
+        if (!mBluetoothAdapter.isEnabled) {
+            mBluetoothAdapter.enable()
+            Timber.i("Enabling bluetooth")
+        } else {
+            Timber.i("Bluetooth is working")
+        }
+
         return mBinder
     }
 
@@ -155,21 +180,20 @@ class BluetoothLeService : Service() {
      * @return Return true if the initialization is successful.
      */
     fun initialize(): Boolean {
-        // For API level 18 and above, get a reference to BluetoothAdapter through
-        // BluetoothManager.
-        if (mBluetoothManager == null) {
-            mBluetoothManager = getSystemService(BLUETOOTH_SERVICE) as BluetoothManager
-            if (mBluetoothManager == null) {
-                Timber.e( "Unable to initialize BluetoothManager.")
-                return false
-            }
+        if (!isEnabled()) {
+            enableBle()
         }
-        mBluetoothAdapter = mBluetoothManager!!.adapter
-        if (mBluetoothAdapter == null) {
-            Timber.e( "Unable to obtain a BluetoothAdapter.")
-            return false
-        }
+
         return true
+    }
+
+    fun isEnabled(): Boolean {
+        if (!mBluetoothAdapter.isEnabled) {
+            Timber.i("Enabling bluetooth")
+        } else {
+            Timber.i("Bluetooth is working")
+        }
+        return mBluetoothAdapter.isEnabled
     }
 
     /**
@@ -183,14 +207,14 @@ class BluetoothLeService : Service() {
      * callback.
      */
     fun connect(address: String?): Boolean {
-        if (mBluetoothAdapter == null || address == null) {
-            Timber.w( "BluetoothAdapter not initialized or unspecified address.")
+        if (address == null) {
+            Timber.w("Unspecified address.")
             return false
         }
 
         // Previously connected device.  Try to reconnect.
         if (mBluetoothDeviceAddress != null && address == mBluetoothDeviceAddress && mBluetoothGatt != null) {
-            Timber.d( "Trying to use an existing mBluetoothGatt for connection.")
+            Timber.d("Trying to use an existing mBluetoothGatt for connection.")
             return if (mBluetoothGatt!!.connect()) {
                 mConnectionState = STATE_CONNECTING
                 true
@@ -198,15 +222,15 @@ class BluetoothLeService : Service() {
                 false
             }
         }
-        val device = mBluetoothAdapter!!.getRemoteDevice(address)
+        val device = mBluetoothAdapter.getRemoteDevice(address)
         if (device == null) {
-            Timber.w( "Device not found.  Unable to connect.")
+            Timber.w("Device not found.  Unable to connect.")
             return false
         }
         // We want to directly connect to the device, so we are setting the autoConnect
         // parameter to false.
         mBluetoothGatt = device.connectGatt(this, false, mGattCallback)
-        Timber.d( "Trying to create a new connection.")
+        Timber.d("Trying to create a new connection.")
         mBluetoothDeviceAddress = address
         mConnectionState = STATE_CONNECTING
         return true
@@ -219,8 +243,8 @@ class BluetoothLeService : Service() {
      * callback.
      */
     fun disconnect() {
-        if (mBluetoothAdapter == null || mBluetoothGatt == null) {
-            Timber.w( "BluetoothAdapter not initialized")
+        if (mBluetoothGatt == null) {
+            Timber.w("BluetoothAdapter not initialized")
             return
         }
         mBluetoothGatt!!.disconnect()
@@ -246,8 +270,8 @@ class BluetoothLeService : Service() {
      * @param characteristic The characteristic to read from.
      */
     fun readCharacteristic(characteristic: BluetoothGattCharacteristic?) {
-        if (mBluetoothAdapter == null || mBluetoothGatt == null) {
-            Timber.w( "BluetoothAdapter not initialized")
+        if (mBluetoothGatt == null) {
+            Timber.w("BluetoothAdapter not initialized")
             return
         }
         mBluetoothGatt!!.readCharacteristic(characteristic)
@@ -263,8 +287,8 @@ class BluetoothLeService : Service() {
         characteristic: BluetoothGattCharacteristic,
         enabled: Boolean
     ) {
-        if (mBluetoothAdapter == null || mBluetoothGatt == null) {
-            Timber.w( "BluetoothAdapter not initialized")
+        if (mBluetoothGatt == null) {
+            Timber.w("BluetoothAdapter not initialized")
             return
         }
         mBluetoothGatt!!.setCharacteristicNotification(characteristic, enabled)
@@ -280,32 +304,33 @@ class BluetoothLeService : Service() {
     fun startAdv() {
         // After onAdvertisingSetStarted callback is called, you can modify the
         // advertising data and scan response data:
-        var uuid = ParcelUuid(UUID_THROUGHTPUT_MEASUREMENT)
-        var mBleData: AdvertiseData? = (AdvertiseData.Builder()).addServiceData(uuid, "1".toByteArray()).build();
+        val uuid = ParcelUuid(UUID_THROUGHPUT_MEASUREMENT)
+        val mBleData: AdvertiseData? =
+            (AdvertiseData.Builder()).addServiceData(uuid, "1".toByteArray()).build()
 
-        mBluetoothAdvertiser.startAdvertising(mBluetoothAdvParameters, mBleData, mBleDataRespons, mAdvCallback);
+        mBluetoothAdvertiser.startAdvertising(mBluetoothAdvParameters, mBleData, mAdvCallback)
     }
 
     fun stopAdv() {
         // Can also stop and restart the advertising
-        currentAdvertisingSet?.enableAdvertising(false, 0, 0);
+        currentAdvertisingSet?.enableAdvertising(false, 0, 0)
         // Wait for onAdvertisingEnabled callback...
-        currentAdvertisingSet?.enableAdvertising(true, 60000, 200);
+        currentAdvertisingSet?.enableAdvertising(true, 60000, 200)
         // Wait for onAdvertisingEnabled callback...
 
         // Wait for onScanResponseDataSet callback...
-        mBluetoothAdvertiser.stopAdvertising(mAdvCallback);
+        mBluetoothAdvertiser.stopAdvertising(mAdvCallback)
     }
 
     private val mAdvCallback: AdvertiseCallback = object : AdvertiseCallback() {
         override fun onStartSuccess(settingsInEffect: AdvertiseSettings) {
-            super.onStartSuccess(settingsInEffect);
-            Timber.i( "LE Advertise success.");
+            super.onStartSuccess(settingsInEffect)
+            Timber.i("LE Advertise success.")
         }
 
         override fun onStartFailure(errorCode: Int) {
-            Timber.e("Advertising onStartFailure: $errorCode");
-            super.onStartFailure(errorCode);
+            Timber.e("Advertising onStartFailure: $errorCode")
+            super.onStartFailure(errorCode)
         }
     }
 
@@ -321,17 +346,86 @@ class BluetoothLeService : Service() {
     }
 
     companion object {
-        val TAG = BluetoothLeService::class.java.simpleName
         private const val STATE_DISCONNECTED = 0
         private const val STATE_CONNECTING = 1
         private const val STATE_CONNECTED = 2
 
         const val ACTION_GATT_CONNECTED = "com.example.bluetooth.le.ACTION_GATT_CONNECTED"
         const val ACTION_GATT_DISCONNECTED = "com.example.bluetooth.le.ACTION_GATT_DISCONNECTED"
-        const val ACTION_GATT_SERVICES_DISCOVERED = "com.example.bluetooth.le.ACTION_GATT_SERVICES_DISCOVERED"
+        const val ACTION_GATT_SERVICES_DISCOVERED =
+            "com.example.bluetooth.le.ACTION_GATT_SERVICES_DISCOVERED"
         const val ACTION_DATA_AVAILABLE = "com.example.bluetooth.le.ACTION_DATA_AVAILABLE"
         const val EXTRA_DATA = "com.example.bluetooth.le.EXTRA_DATA"
         val UUID_HEART_RATE_MEASUREMENT = UUID.fromString("00002a37-0000-1000-8000-00805f9b34fb")
-        val UUID_THROUGHTPUT_MEASUREMENT = UUID.fromString("0483dadd-6c9d-6ca9-5d41-03ad4fff4abb")
+        val UUID_THROUGHPUT_MEASUREMENT = UUID.fromString("0483dadd-6c9d-6ca9-5d41-03ad4fff4abb")
+    }
+
+
+    private fun enableBle() {
+        Timber.i("There is possibility to use bluetooth")
+        // Register for broadcasts when a device is discovered.
+        val filter = IntentFilter(BluetoothDevice.ACTION_FOUND)
+        registerReceiver(receiver, filter)
+    }
+
+    private fun disableBle() {
+        // Don't forget to unregister the ACTION_FOUND receiver.
+        unregisterReceiver(receiver)
+    }
+
+
+    private var scanning = false
+
+    // Stops scanning after 10 seconds.
+    private val SCAN_PERIOD: Long = 10000
+
+    private val leScanCallback: ScanCallback = object : ScanCallback() {
+        override fun onScanResult(callbackType: Int, result: ScanResult) {
+            super.onScanResult(callbackType, result)
         }
     }
+
+    fun scanLeDevice() {
+        if (!scanning) {
+            startLeScan()
+        } else {
+            stopLeScan()
+        }
+    }
+
+    fun startLeScan() {
+        if (!scanning) {
+            // Stops scanning after a predefined scan period.
+            Handler(Looper.getMainLooper()).postDelayed({
+                stopLeScan()
+            }, SCAN_PERIOD)
+            scanning = true
+            mBluetoothLEScanner.startScan(leScanCallback)
+        }
+    }
+
+    fun stopLeScan() {
+        if (scanning) {
+            scanning = false
+            mBluetoothLEScanner.stopScan(leScanCallback)
+        }
+    }
+
+    // add async pulling of discovery requests
+// https://developer.android.com/guide/topics/connectivity/bluetooth/find-bluetooth-devices
+// Create a BroadcastReceiver for ACTION_FOUND.
+    private val receiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            when (intent.action) {
+                BluetoothDevice.ACTION_FOUND -> {
+                    // Discovery has found a device. Get the BluetoothDevice
+                    // object and its info from the Intent.
+                    val device: BluetoothDevice =
+                        intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)!!
+
+                    devicesMap[device.address] = device
+                }
+            }
+        }
+    }
+}
