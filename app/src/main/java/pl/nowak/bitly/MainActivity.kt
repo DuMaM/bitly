@@ -2,15 +2,18 @@ package pl.nowak.bitly
 
 import android.Manifest
 import android.app.Activity
-import android.bluetooth.BluetoothGattCharacteristic
-import android.content.*
+import android.content.ComponentName
+import android.content.Intent
+import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import android.view.View
-import android.widget.*
+import android.widget.ArrayAdapter
+import android.widget.Button
+import android.widget.Spinner
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -57,7 +60,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun setData(count: Int, range: Double) : BarData {
+    private fun setData(count: Int, range: Double): BarData {
         // now in hours
         val now: Long = TimeUnit.MILLISECONDS.toHours(System.currentTimeMillis())
         val values: ArrayList<BarEntry> = ArrayList()
@@ -105,7 +108,7 @@ class MainActivity : AppCompatActivity() {
 
         // set an alternative background color
         val data = setData(20, 0.4)
-        chart.setData(data)
+        chart.data = data
 
         // in this example, a LineChart is initialized from xml
         chartBER = findViewById<View>(R.id.chartBER) as BarChart
@@ -150,7 +153,7 @@ class MainActivity : AppCompatActivity() {
         ActivityCompat.requestPermissions(this, arrayOf(permission), requestCode)
     }
 
-    private fun addDeviceToView(address: String, name: String):Boolean {
+    private fun addDeviceToView(address: String, name: String): Boolean {
         var display: String = address
         if (!name.isEmpty()) {
             display += ": " + name
@@ -164,8 +167,10 @@ class MainActivity : AppCompatActivity() {
         return true
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>,
-                                            grantResults: IntArray) {
+    override fun onRequestPermissionsResult(
+        requestCode: Int, permissions: Array<String>,
+        grantResults: IntArray
+    ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         when (requestCode) {
             multiplePermissions -> {
@@ -175,8 +180,12 @@ class MainActivity : AppCompatActivity() {
                 }
                 grantResults.forEachIndexed { index, it ->
                     if (it == PackageManager.PERMISSION_GRANTED &&
-                        ContextCompat.checkSelfPermission(this@MainActivity, permissions[index]) == PackageManager.PERMISSION_GRANTED) {
-                            Timber.i("${permissions[index]} Granted access")
+                        ContextCompat.checkSelfPermission(
+                            this@MainActivity,
+                            permissions[index]
+                        ) == PackageManager.PERMISSION_GRANTED
+                    ) {
+                        Timber.i("${permissions[index]} Granted access")
 
                     }
                 }
@@ -195,27 +204,62 @@ class MainActivity : AppCompatActivity() {
                         Manifest.permission.BLUETOOTH_ADMIN,
                         Manifest.permission.ACCESS_FINE_LOCATION,
                         Manifest.permission.BLUETOOTH_ADVERTISE,
+                        Manifest.permission.ACCESS_COARSE_LOCATION,
                         Manifest.permission.BLUETOOTH_SCAN,
-                        Manifest.permission.BLUETOOTH_CONNECT), multiplePermissions)
+                        Manifest.permission.BLUETOOTH_CONNECT
+                    ), multiplePermissions
+                )
             } else {
                 Timber.d("Requesting permissions for app BLE location and admin")
                 requestPermissions(
                     arrayOf(
                         Manifest.permission.BLUETOOTH_ADMIN,
-                        Manifest.permission.ACCESS_FINE_LOCATION), multiplePermissions)
+                        Manifest.permission.ACCESS_FINE_LOCATION
+                    ), multiplePermissions
+                )
             }
         }
 
-        if ((ContextCompat.checkSelfPermission(this@MainActivity, Manifest.permission.BLUETOOTH_ADMIN) +
-            ContextCompat.checkSelfPermission(this@MainActivity, Manifest.permission.BLUETOOTH_CONNECT) +
-                    ContextCompat.checkSelfPermission(this@MainActivity, Manifest.permission.BLUETOOTH_ADVERTISE) +
-            ContextCompat.checkSelfPermission(this@MainActivity, Manifest.permission.ACCESS_FINE_LOCATION))
-                != PackageManager.PERMISSION_GRANTED) {
+        if ((ContextCompat.checkSelfPermission(
+                this@MainActivity,
+                Manifest.permission.BLUETOOTH_ADMIN
+            ) +
+                    ContextCompat.checkSelfPermission(
+                        this@MainActivity,
+                        Manifest.permission.BLUETOOTH_CONNECT
+                    ) +
+                    ContextCompat.checkSelfPermission(
+                        this@MainActivity,
+                        Manifest.permission.BLUETOOTH_ADVERTISE
+                    ) +
+                    ContextCompat.checkSelfPermission(
+                        this@MainActivity,
+                        Manifest.permission.ACCESS_FINE_LOCATION
+                    ) +
+                    ContextCompat.checkSelfPermission(
+                        this@MainActivity,
+                        Manifest.permission.ACCESS_FINE_LOCATION
+                    ))
+            != PackageManager.PERMISSION_GRANTED
+        ) {
 
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this@MainActivity, Manifest.permission.BLUETOOTH_ADMIN) ||
-                ActivityCompat.shouldShowRequestPermissionRationale(this@MainActivity, Manifest.permission.BLUETOOTH_CONNECT) ||
-                ActivityCompat.shouldShowRequestPermissionRationale(this@MainActivity, Manifest.permission.BLUETOOTH_ADVERTISE) ||
-                ActivityCompat.shouldShowRequestPermissionRationale(this@MainActivity, Manifest.permission.ACCESS_FINE_LOCATION)) {
+            if (ActivityCompat.shouldShowRequestPermissionRationale(
+                    this@MainActivity,
+                    Manifest.permission.BLUETOOTH_ADMIN
+                ) ||
+                ActivityCompat.shouldShowRequestPermissionRationale(
+                    this@MainActivity,
+                    Manifest.permission.BLUETOOTH_CONNECT
+                ) ||
+                ActivityCompat.shouldShowRequestPermissionRationale(
+                    this@MainActivity,
+                    Manifest.permission.BLUETOOTH_ADVERTISE
+                ) ||
+                ActivityCompat.shouldShowRequestPermissionRationale(
+                    this@MainActivity,
+                    Manifest.permission.ACCESS_FINE_LOCATION
+                )
+            ) {
                 permRequest()
             } else {
                 permRequest()
@@ -226,10 +270,11 @@ class MainActivity : AppCompatActivity() {
 
     private fun initBleList() {
         // init device linear layout
-        spDevicesArray = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, ArrayList<String>()  )
+        spDevicesArray =
+            ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, ArrayList<String>())
         spDevices = findViewById(R.id.spDevicesView)
-        spDevices.setAdapter(spDevicesArray)
-        spDevices.setVisibility(View.VISIBLE)
+        spDevices.adapter = spDevicesArray
+        spDevices.visibility = View.VISIBLE
 
         btScan = this.findViewById(R.id.btScanView)
         btScan.setOnClickListener {
@@ -251,7 +296,7 @@ class MainActivity : AppCompatActivity() {
 
         btClear = this.findViewById(R.id.btCleanView)
         btClear.setOnClickListener {
-           // bluetoothAdapter.cancelDiscovery()
+            // bluetoothAdapter.cancelDiscovery()
             mBluetoothLeService.stopLeScan()
             mBluetoothLeService.devicesMap.clear()
             spDevicesArray.clear()
@@ -259,7 +304,7 @@ class MainActivity : AppCompatActivity() {
 
         btConnect = this.findViewById(R.id.btConnectView)
         btConnect.setOnClickListener {
-            val deviceName: String = spDevices.getSelectedItem().toString()
+            val deviceName: String = spDevices.selectedItem.toString()
             val device = mBluetoothLeService.devicesMap[deviceName]
             if (device != null) {
                 // it's not allowed to discover and connect
