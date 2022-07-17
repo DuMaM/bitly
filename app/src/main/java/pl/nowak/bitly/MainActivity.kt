@@ -1,18 +1,14 @@
 package pl.nowak.bitly
 
 import android.Manifest
-import android.bluetooth.BluetoothAdapter
-import android.bluetooth.BluetoothDevice
-import android.bluetooth.BluetoothManager
-import android.bluetooth.BluetoothSocket
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
+import android.app.Activity
+import android.bluetooth.BluetoothGattCharacteristic
+import android.content.*
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
+import android.os.IBinder
 import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
@@ -25,11 +21,7 @@ import com.github.mikephil.charting.data.BarDataSet
 import com.github.mikephil.charting.data.BarEntry
 import com.github.mikephil.charting.utils.ColorTemplate
 import timber.log.Timber
-import java.io.IOException
-import java.util.*
 import java.util.concurrent.TimeUnit
-import kotlin.collections.ArrayList
-import kotlin.collections.HashMap
 import kotlin.random.Random
 
 
@@ -41,34 +33,27 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var spDevices: Spinner
     private lateinit var spDevicesArray: ArrayAdapter<String>
-    private var devicesMap: HashMap<String, BluetoothDevice> = hashMapOf()
 
     private val multiplePermissions: Int = 100
-    private lateinit var bluetoothManager: BluetoothManager
-    private lateinit var bluetoothAdapter: BluetoothAdapter
 
     private lateinit var chart: BarChart
     private lateinit var chartBER: BarChart
-    
-    private var deviceUUID: UUID = UUID.nameUUIDFromBytes(byteArrayOf(0xBB.toByte(), 0x4A,
-        0xFF.toByte(), 0x4F,
-        0xAD.toByte(), 0x03, 0x41, 0x5D, 0xA9.toByte(), 0x6C,
-        0x9D.toByte(), 0x6C, 0xDD.toByte(), 0xDA.toByte(), 0x83.toByte(), 0x04))
 
+    private lateinit var mBluetoothLeService: BluetoothLeService
 
-    // add async pulling of discovery requests
-    // https://developer.android.com/guide/topics/connectivity/bluetooth/find-bluetooth-devices
-    // Create a BroadcastReceiver for ACTION_FOUND.
-    private val receiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            when(intent.action) {
-                BluetoothDevice.ACTION_FOUND -> {
-                    // Discovery has found a device. Get the BluetoothDevice
-                    // object and its info from the Intent.
-                    val device: BluetoothDevice = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)!!
-                    addDeviceToView(device)
-                }
+    // Code to manage Service lifecycle.
+    private val mServiceConnection: ServiceConnection = object : ServiceConnection {
+        override fun onServiceConnected(componentName: ComponentName, service: IBinder) {
+            mBluetoothLeService = (service as BluetoothLeService.LocalBinder).service
+            if (!mBluetoothLeService.initialize()) {
+                Timber.e("Unable to initialize Bluetooth")
+                finish()
             }
+
+            mBluetoothLeService.startAdv()
+        }
+
+        override fun onServiceDisconnected(componentName: ComponentName) {
         }
     }
 
@@ -141,54 +126,42 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        enableBle()
         initGraphs()
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        disableBle()
-    }
-
-    private fun enableBle() {
-        bluetoothManager = applicationContext.getSystemService(BLUETOOTH_SERVICE) as BluetoothManager
-        bluetoothAdapter = bluetoothManager.adapter
-        Timber.i("There is possibility to use bluetooth")
-
-        checkBlePermission()
-
-        if (!bluetoothAdapter.isEnabled) {
-            bluetoothAdapter.enable()
-            Timber.i("Enabling bluetooth")
-        } else {
-            Timber.i("Bluetooth is working")
+    override fun onResume() {
+        super.onResume()
+        if (!mBluetoothLeService.isEnabled()) {
+            checkBlePermission()
         }
 
-        // Register for broadcasts when a device is discovered.
-        val filter = IntentFilter(BluetoothDevice.ACTION_FOUND)
-        registerReceiver(receiver, filter)
-
+        val gattServiceIntent = Intent(this, BluetoothLeService::class.java)
+        bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE)
         initBleList()
     }
 
-    private fun disableBle() {
-        // Don't forget to unregister the ACTION_FOUND receiver.
-        unregisterReceiver(receiver)
+
+    override fun onDestroy() {
+        super.onDestroy()
+        mBluetoothLeService.disconnect()
     }
 
+    private fun Activity.requestPermission(permission: String, requestCode: Int) {
+        ActivityCompat.requestPermissions(this, arrayOf(permission), requestCode)
+    }
 
-    private fun addDeviceToView(device: BluetoothDevice) {
-        var display: String = device.address
-        if (device.name != null) {
-            display += ": " + device.name
+    private fun addDeviceToView(address: String, name: String):Boolean {
+        var display: String = address
+        if (!name.isEmpty()) {
+            display += ": " + name
         }
 
-        if (devicesMap.containsKey(display)) {
-            return
+        if (mBluetoothLeService.devicesMap.containsKey(display)) {
+            return false
         }
 
-        spDevicesArray.add(display)
-        devicesMap[display] = device
+        runOnUiThread { spDevicesArray.add(display) }
+        return true
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>,
@@ -221,6 +194,7 @@ class MainActivity : AppCompatActivity() {
                     arrayOf(
                         Manifest.permission.BLUETOOTH_ADMIN,
                         Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.BLUETOOTH_ADVERTISE,
                         Manifest.permission.BLUETOOTH_SCAN,
                         Manifest.permission.BLUETOOTH_CONNECT), multiplePermissions)
             } else {
@@ -234,11 +208,13 @@ class MainActivity : AppCompatActivity() {
 
         if ((ContextCompat.checkSelfPermission(this@MainActivity, Manifest.permission.BLUETOOTH_ADMIN) +
             ContextCompat.checkSelfPermission(this@MainActivity, Manifest.permission.BLUETOOTH_CONNECT) +
+                    ContextCompat.checkSelfPermission(this@MainActivity, Manifest.permission.BLUETOOTH_ADVERTISE) +
             ContextCompat.checkSelfPermission(this@MainActivity, Manifest.permission.ACCESS_FINE_LOCATION))
                 != PackageManager.PERMISSION_GRANTED) {
 
             if (ActivityCompat.shouldShowRequestPermissionRationale(this@MainActivity, Manifest.permission.BLUETOOTH_ADMIN) ||
                 ActivityCompat.shouldShowRequestPermissionRationale(this@MainActivity, Manifest.permission.BLUETOOTH_CONNECT) ||
+                ActivityCompat.shouldShowRequestPermissionRationale(this@MainActivity, Manifest.permission.BLUETOOTH_ADVERTISE) ||
                 ActivityCompat.shouldShowRequestPermissionRationale(this@MainActivity, Manifest.permission.ACCESS_FINE_LOCATION)) {
                 permRequest()
             } else {
@@ -247,54 +223,49 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+
     private fun initBleList() {
         // init device linear layout
-        spDevicesArray = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, ArrayList<String>() )
+        spDevicesArray = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, ArrayList<String>()  )
         spDevices = findViewById(R.id.spDevicesView)
         spDevices.setAdapter(spDevicesArray)
         spDevices.setVisibility(View.VISIBLE)
 
         btScan = this.findViewById(R.id.btScanView)
         btScan.setOnClickListener {
-            Timber.i("Loading bounded devices on list")
-            bluetoothAdapter.bondedDevices.forEach { device ->
-                addDeviceToView(device)
-            }
-
-            // https://developer.android.com/reference/android/bluetooth/BluetoothAdapter#startDiscovery()
-            Timber.i("Looking for devices")
-            if (!bluetoothAdapter.isDiscovering) {
-                bluetoothAdapter.startDiscovery()
-                Toast.makeText(this, "Scanning started", Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(this, "Scanning is still in progress", Toast.LENGTH_SHORT).show()
-            }
+            mBluetoothLeService.scanLeDevice()
+//            Timber.i("Loading bounded devices on list")
+//            bluetoothAdapter.bondedDevices.forEach { device ->
+//                addDeviceToView(device)
+//            }
+//
+//            // https://developer.android.com/reference/android/bluetooth/BluetoothAdapter#startDiscovery()
+//            Timber.i("Looking for devices")
+//            if (!bluetoothAdapter.isDiscovering) {
+//                bluetoothAdapter.startDiscovery()
+//                Toast.makeText(this, "Scanning started", Toast.LENGTH_SHORT).show()
+//            } else {
+//                Toast.makeText(this, "Scanning is still in progress", Toast.LENGTH_SHORT).show()
+//            }
         }
 
         btClear = this.findViewById(R.id.btCleanView)
         btClear.setOnClickListener {
-            bluetoothAdapter.cancelDiscovery()
+           // bluetoothAdapter.cancelDiscovery()
+            mBluetoothLeService.stopLeScan()
+            mBluetoothLeService.devicesMap.clear()
             spDevicesArray.clear()
-            devicesMap.clear()
         }
 
         btConnect = this.findViewById(R.id.btConnectView)
         btConnect.setOnClickListener {
             val deviceName: String = spDevices.getSelectedItem().toString()
-            var device: BluetoothDevice? = devicesMap[deviceName]
+            val device = mBluetoothLeService.devicesMap[deviceName]
             if (device != null) {
                 // it's not allowed to discover and connect
-                bluetoothAdapter.cancelDiscovery()
-
-                var mSocket: BluetoothSocket = device.createRfcommSocketToServiceRecord(deviceUUID)
-                Toast.makeText(this, "Connecting to " + device.address, Toast.LENGTH_SHORT).show()
-                try {
-                    mSocket.connect()
-                } catch (e: IOException) {
-                    var errorMsg = "Connection Failed with error: $e"
-                    Timber.e(errorMsg)
-                    Toast.makeText(this, errorMsg, Toast.LENGTH_SHORT).show()
-                }
+                //bluetoothAdapter.cancelDiscovery()
+                mBluetoothLeService.stopLeScan()
+                mBluetoothLeService.connect(device.address)
             }
         }
     }
