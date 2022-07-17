@@ -3,7 +3,10 @@ package pl.nowak.bitly
 import android.app.Service
 import android.bluetooth.*
 import android.bluetooth.le.*
-import android.content.*
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
 import android.os.*
 import timber.log.Timber
 import java.util.*
@@ -43,8 +46,8 @@ class BluetoothLeService : Service() {
 
     private var currentAdvertisingSet: AdvertisingSet? = null
     private val mBluetoothAdvParameters: AdvertiseSettings = AdvertiseSettings.Builder()
-        .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY)
-        .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_HIGH)
+        .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_BALANCED)
+        .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_LOW)
         .setConnectable(true)
         .build()
 
@@ -81,9 +84,8 @@ class BluetoothLeService : Service() {
         override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 broadcastUpdate(ACTION_GATT_SERVICES_DISCOVERED)
-            } else {
-                Timber.w("onServicesDiscovered received: $status")
             }
+            Timber.w("onServicesDiscovered received: $status")
         }
 
         override fun onCharacteristicRead(
@@ -100,6 +102,7 @@ class BluetoothLeService : Service() {
             gatt: BluetoothGatt,
             characteristic: BluetoothGattCharacteristic
         ) {
+            Timber.i("onCharacteristicChanged received: $characteristic")
             broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic)
         }
     }
@@ -118,33 +121,19 @@ class BluetoothLeService : Service() {
         // This is special handling for the Heart Rate Measurement profile.  Data parsing is
         // carried out as per profile specifications:
         // http://developer.bluetooth.org/gatt/characteristics/Pages/CharacteristicViewer.aspx?u=org.bluetooth.characteristic.heart_rate_measurement.xml
-        if (UUID_HEART_RATE_MEASUREMENT == characteristic.uuid) {
-            val flag = characteristic.properties
-            val format: Int
-            if (flag and 0x01 != 0) {
-                format = BluetoothGattCharacteristic.FORMAT_UINT16
-                Timber.d("Heart rate format UINT16.")
-            } else {
-                format = BluetoothGattCharacteristic.FORMAT_UINT8
-                Timber.d("Heart rate format UINT8.")
-            }
-            val heartRate = characteristic.getIntValue(format, 1)
-            Timber.d(String.format("Received heart rate: %d", heartRate))
-            intent.putExtra(EXTRA_DATA, heartRate.toString())
-        } else {
-            // For all other profiles, writes the data formatted in HEX.
-            val data = characteristic.value
-            if (data != null && data.size > 0) {
-                val stringBuilder = StringBuilder(data.size)
-                for (byteChar in data) stringBuilder.append(String.format("%02X ", byteChar))
-                intent.putExtra(
-                    EXTRA_DATA, """
+        // For all other profiles, writes the data formatted in HEX.
+        val data = characteristic.value
+        if (data != null && data.size > 0) {
+            val stringBuilder = StringBuilder(data.size)
+            for (byteChar in data) stringBuilder.append(String.format("%02X ", byteChar))
+            intent.putExtra(
+                EXTRA_DATA, """
                                  ${String(data)}
                                  $stringBuilder
                                  """.trimIndent()
-                )
-            }
+            )
         }
+
         sendBroadcast(intent)
     }
 
@@ -154,7 +143,7 @@ class BluetoothLeService : Service() {
     }
 
     override fun onBind(intent: Intent): IBinder? {
-        if (!mBluetoothAdapter.isEnabled) {
+        if (!isEnabled()) {
             mBluetoothAdapter.enable()
             Timber.i("Enabling bluetooth")
         } else {
@@ -189,7 +178,7 @@ class BluetoothLeService : Service() {
 
     fun isEnabled(): Boolean {
         if (!mBluetoothAdapter.isEnabled) {
-            Timber.i("Enabling bluetooth")
+            Timber.i("Bluetooth is not enabled")
         } else {
             Timber.i("Bluetooth is working")
         }
@@ -292,23 +281,26 @@ class BluetoothLeService : Service() {
             return
         }
         mBluetoothGatt!!.setCharacteristicNotification(characteristic, enabled)
-
-        // This is specific to Heart Rate Measurement.
-//        if (UUID_HEART_RATE_MEASUREMENT == characteristic.uuid) {
-//            val descriptor = characteristic.getDescriptor(UUID.fromString(SampleGattAttributes.CLIENT_CHARACTERISTIC_CONFIG)
-//            descriptor.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
-//            mBluetoothGatt!!.writeDescriptor(descriptor)
-//        }
     }
 
-    fun startAdv() {
+    fun startAdv() : Boolean {
+        if (isMultipleAdvertisementSupported()) {
+            Timber.i("Multiple advertisement supported")
+        } else {
+            Timber.i("Multiple advertisement not supported")
+            return false
+        }
+
         // After onAdvertisingSetStarted callback is called, you can modify the
         // advertising data and scan response data:
-        val uuid = ParcelUuid(UUID_THROUGHPUT_MEASUREMENT)
-        val mBleData: AdvertiseData? =
-            (AdvertiseData.Builder()).addServiceData(uuid, "1".toByteArray()).build()
+        val pUuid = ParcelUuid(UUID_THROUGHPUT_MEASUREMENT)
+        val mBleData = AdvertiseData.Builder()
+            .setIncludeDeviceName(false)
+            .addServiceUuid(pUuid)
+            .build()
 
         mBluetoothAdvertiser.startAdvertising(mBluetoothAdvParameters, mBleData, mAdvCallback)
+        return true
     }
 
     fun stopAdv() {
@@ -329,8 +321,15 @@ class BluetoothLeService : Service() {
         }
 
         override fun onStartFailure(errorCode: Int) {
-            Timber.e("Advertising onStartFailure: $errorCode")
             super.onStartFailure(errorCode)
+            when (errorCode) {
+                ADVERTISE_FAILED_DATA_TOO_LARGE -> Timber.e("LE Advertise failed: ADVERTISE_FAILED_DATA_TOO_LARGE")
+                ADVERTISE_FAILED_ALREADY_STARTED -> Timber.e("LE Advertise failed: ADVERTISE_FAILED_ALREADY_STARTED")
+                ADVERTISE_FAILED_TOO_MANY_ADVERTISERS -> Timber.e("LE Advertise failed: ADVERTISE_FAILED_TOO_MANY_ADVERTISERS")
+                ADVERTISE_FAILED_INTERNAL_ERROR -> Timber.e("LE Advertise failed: ADVERTISE_FAILED_INTERNAL_ERROR")
+                ADVERTISE_FAILED_FEATURE_UNSUPPORTED -> Timber.e("LE Advertise failed: ADVERTISE_FAILED_FEATURE_UNSUPPORTED")
+                else -> Timber.e("LE Advertise failed: Unknown")
+            }
         }
     }
 
@@ -356,10 +355,12 @@ class BluetoothLeService : Service() {
             "com.example.bluetooth.le.ACTION_GATT_SERVICES_DISCOVERED"
         const val ACTION_DATA_AVAILABLE = "com.example.bluetooth.le.ACTION_DATA_AVAILABLE"
         const val EXTRA_DATA = "com.example.bluetooth.le.EXTRA_DATA"
-        val UUID_HEART_RATE_MEASUREMENT = UUID.fromString("00002a37-0000-1000-8000-00805f9b34fb")
         val UUID_THROUGHPUT_MEASUREMENT = UUID.fromString("0483dadd-6c9d-6ca9-5d41-03ad4fff4abb")
     }
 
+    fun isMultipleAdvertisementSupported(): Boolean {
+        return mBluetoothAdapter.isMultipleAdvertisementSupported
+    }
 
     private fun enableBle() {
         Timber.i("There is possibility to use bluetooth")
