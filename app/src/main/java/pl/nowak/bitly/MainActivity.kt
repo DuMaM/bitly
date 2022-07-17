@@ -1,7 +1,6 @@
 package pl.nowak.bitly
 
 import android.Manifest
-import android.app.Activity
 import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
@@ -52,8 +51,6 @@ class MainActivity : AppCompatActivity() {
                 Timber.e("Unable to initialize Bluetooth")
                 finish()
             }
-
-            mBluetoothLeService.startAdv()
         }
 
         override fun onServiceDisconnected(componentName: ComponentName) {
@@ -134,13 +131,11 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        if (!mBluetoothLeService.isEnabled()) {
-            checkBlePermission()
-        }
-
         val gattServiceIntent = Intent(this, BluetoothLeService::class.java)
         bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE)
         initBleList()
+
+        checkBlePermission()
     }
 
 
@@ -149,14 +144,10 @@ class MainActivity : AppCompatActivity() {
         mBluetoothLeService.disconnect()
     }
 
-    private fun Activity.requestPermission(permission: String, requestCode: Int) {
-        ActivityCompat.requestPermissions(this, arrayOf(permission), requestCode)
-    }
-
     private fun addDeviceToView(address: String, name: String): Boolean {
         var display: String = address
-        if (!name.isEmpty()) {
-            display += ": " + name
+        if (name.isNotEmpty()) {
+            display += ": $name"
         }
 
         if (mBluetoothLeService.devicesMap.containsKey(display)) {
@@ -238,7 +229,7 @@ class MainActivity : AppCompatActivity() {
                     ) +
                     ContextCompat.checkSelfPermission(
                         this@MainActivity,
-                        Manifest.permission.ACCESS_FINE_LOCATION
+                        Manifest.permission.ACCESS_COARSE_LOCATION
                     ))
             != PackageManager.PERMISSION_GRANTED
         ) {
@@ -278,7 +269,8 @@ class MainActivity : AppCompatActivity() {
 
         btScan = this.findViewById(R.id.btScanView)
         btScan.setOnClickListener {
-            mBluetoothLeService.scanLeDevice()
+            mBluetoothLeService.startAdv()
+           // mBluetoothLeService.scanLeDevice()
 //            Timber.i("Loading bounded devices on list")
 //            bluetoothAdapter.bondedDevices.forEach { device ->
 //                addDeviceToView(device)
