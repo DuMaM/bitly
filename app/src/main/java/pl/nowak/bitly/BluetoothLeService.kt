@@ -3,7 +3,6 @@ package pl.nowak.bitly
 import android.app.Service
 import android.bluetooth.*
 import android.bluetooth.le.*
-import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
@@ -31,11 +30,16 @@ class BluetoothLeService : Service() {
         mBluetoothAdapter.bluetoothLeAdvertiser
     }
 
-    private var mBluetoothGatt: BluetoothGatt? = null
+    private val mBluetoothGattServer: BluetoothGattServer by lazy {
+        mBluetoothManager.openGattServer(this, bluetoothGattServerCallback)
+    }
+
+    private var mBluetoothGattService: BluetoothGattService = BluetoothGattService(UUID.fromString(UUID_THROUGHPUT_MEASUREMENT), BluetoothGattService.SERVICE_TYPE_PRIMARY)
+
 
     private val mBleDataResponseResponse: AdvertiseData = AdvertiseData.Builder()
-           .setIncludeDeviceName(true)
-           .build()
+        .setIncludeDeviceName(true)
+        .build()
 
     private var currentAdvertisingSet: AdvertisingSet? = null
     private val mBluetoothAdvParameters: AdvertiseSettings = AdvertiseSettings.Builder()
@@ -44,7 +48,6 @@ class BluetoothLeService : Service() {
         .setConnectable(true)
         .build()
     private val mBinder: IBinder = LocalBinder()
-
 
     inner class LocalBinder : Binder() {
         val service: BluetoothLeService
@@ -58,6 +61,17 @@ class BluetoothLeService : Service() {
         } else {
             Timber.i("Bluetooth is working")
         }
+
+
+        val characteristic = BluetoothGattCharacteristic(UUID.fromString(UUID_THROUGHPUT_MEASUREMENT_CHAR),
+            BluetoothGattCharacteristic.PROPERTY_READ or
+                    BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE,
+            BluetoothGattCharacteristic.PERMISSION_READ or
+                    BluetoothGattCharacteristic.PERMISSION_WRITE
+        )
+
+        mBluetoothGattService.addCharacteristic(characteristic)
+        mBluetoothGattServer.addService(mBluetoothGattService)
 
         return mBinder
     }
@@ -149,6 +163,80 @@ class BluetoothLeService : Service() {
     }
 
 
+    var bluetoothGattServerCallback: BluetoothGattServerCallback = object : BluetoothGattServerCallback() {
+        override fun onConnectionStateChange(
+            device: BluetoothDevice?,
+            status: Int,
+            newState: Int
+        ) {
+            super.onConnectionStateChange(device, status, newState)
+        }
+
+        override fun onCharacteristicReadRequest(
+            device: BluetoothDevice?,
+            requestId: Int,
+            offset: Int,
+            characteristic: BluetoothGattCharacteristic?
+        ) {
+            super.onCharacteristicReadRequest(device, requestId, offset, characteristic)
+            //mBluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, YOUR_RESPONSE);
+        }
+
+        override fun onCharacteristicWriteRequest(
+            device: BluetoothDevice?,
+            requestId: Int,
+            characteristic: BluetoothGattCharacteristic?,
+            preparedWrite: Boolean,
+            responseNeeded: Boolean,
+            offset: Int,
+            value: ByteArray?
+        ) {
+            super.onCharacteristicWriteRequest(
+                device,
+                requestId,
+                characteristic,
+                preparedWrite,
+                responseNeeded,
+                offset,
+                value
+            )
+        }
+
+        override fun onDescriptorReadRequest(
+            device: BluetoothDevice?,
+            requestId: Int,
+            offset: Int,
+            descriptor: BluetoothGattDescriptor?
+        ) {
+            super.onDescriptorReadRequest(device, requestId, offset, descriptor)
+        }
+
+        override fun onDescriptorWriteRequest(
+            device: BluetoothDevice?,
+            requestId: Int,
+            descriptor: BluetoothGattDescriptor?,
+            preparedWrite: Boolean,
+            responseNeeded: Boolean,
+            offset: Int,
+            value: ByteArray?
+        ) {
+            super.onDescriptorWriteRequest(
+                device,
+                requestId,
+                descriptor,
+                preparedWrite,
+                responseNeeded,
+                offset,
+                value
+            )
+        }
+    }
+
+    // All BLE characteristic UUIDs are of the form:
+    // 0000XXXX-0000-1000-8000-00805f9b34fb
+    // The assigned number for the Heart Rate Measurement characteristic UUID is
+    // listed as 0x2A37, which is how the developer of the sample code could arrive at:
+    // 00002a37-0000-1000-8000-00805f9b34fb
     companion object {
         private const val STATE_DISCONNECTED = 0
         private const val STATE_CONNECTING = 1
@@ -160,6 +248,7 @@ class BluetoothLeService : Service() {
         const val ACTION_DATA_AVAILABLE = "com.example.bluetooth.le.ACTION_DATA_AVAILABLE"
         const val EXTRA_DATA = "com.example.bluetooth.le.EXTRA_DATA"
         const val UUID_THROUGHPUT_MEASUREMENT = "0483dadd-6c9d-6ca9-5d41-03ad4fff4abb"
+        const val UUID_THROUGHPUT_MEASUREMENT_CHAR = "00001524-0000-1000-8000-00805f9b34fb"
     }
 
     fun isMultipleAdvertisementSupported(): Boolean {
@@ -176,3 +265,4 @@ class BluetoothLeService : Service() {
         // Don't forget to unregister the ACTION_FOUND receiver.
     }
 }
+
