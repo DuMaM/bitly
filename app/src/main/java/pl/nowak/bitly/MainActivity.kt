@@ -141,17 +141,12 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        mBluetoothLeService.disconnect()
     }
 
     private fun addDeviceToView(address: String, name: String): Boolean {
         var display: String = address
         if (name.isNotEmpty()) {
             display += ": $name"
-        }
-
-        if (mBluetoothLeService.devicesMap.containsKey(display)) {
-            return false
         }
 
         runOnUiThread { spDevicesArray.add(display) }
@@ -270,40 +265,17 @@ class MainActivity : AppCompatActivity() {
         btScan = this.findViewById(R.id.btScanView)
         btScan.setOnClickListener {
             mBluetoothLeService.startAdv()
-           // mBluetoothLeService.scanLeDevice()
-//            Timber.i("Loading bounded devices on list")
-//            bluetoothAdapter.bondedDevices.forEach { device ->
-//                addDeviceToView(device)
-//            }
-//
-//            // https://developer.android.com/reference/android/bluetooth/BluetoothAdapter#startDiscovery()
-//            Timber.i("Looking for devices")
-//            if (!bluetoothAdapter.isDiscovering) {
-//                bluetoothAdapter.startDiscovery()
-//                Toast.makeText(this, "Scanning started", Toast.LENGTH_SHORT).show()
-//            } else {
-//                Toast.makeText(this, "Scanning is still in progress", Toast.LENGTH_SHORT).show()
-//            }
         }
 
         btClear = this.findViewById(R.id.btCleanView)
         btClear.setOnClickListener {
             // bluetoothAdapter.cancelDiscovery()
-            mBluetoothLeService.stopLeScan()
-            mBluetoothLeService.devicesMap.clear()
             spDevicesArray.clear()
         }
 
         btConnect = this.findViewById(R.id.btConnectView)
         btConnect.setOnClickListener {
             val deviceName: String = spDevices.selectedItem.toString()
-            val device = mBluetoothLeService.devicesMap[deviceName]
-            if (device != null) {
-                // it's not allowed to discover and connect
-                //bluetoothAdapter.cancelDiscovery()
-                mBluetoothLeService.stopLeScan()
-                mBluetoothLeService.connect(device.address)
-            }
         }
     }
 }
