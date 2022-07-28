@@ -34,7 +34,10 @@ class BluetoothLeService : Service() {
         mBluetoothManager.openGattServer(this, bluetoothGattServerCallback)
     }
 
-    private var mBluetoothGattService: BluetoothGattService = BluetoothGattService(UUID.fromString(UUID_THROUGHPUT_MEASUREMENT), BluetoothGattService.SERVICE_TYPE_PRIMARY)
+    private var mBluetoothGattService: BluetoothGattService = BluetoothGattService(
+        UUID.fromString(UUID_THROUGHPUT_MEASUREMENT),
+        BluetoothGattService.SERVICE_TYPE_PRIMARY
+    )
 
 
     private val mBleDataResponseResponse: AdvertiseData = AdvertiseData.Builder()
@@ -63,7 +66,8 @@ class BluetoothLeService : Service() {
         }
 
 
-        val characteristic = BluetoothGattCharacteristic(UUID.fromString(UUID_THROUGHPUT_MEASUREMENT_CHAR),
+        val characteristic = BluetoothGattCharacteristic(
+            UUID.fromString(UUID_THROUGHPUT_MEASUREMENT_CHAR),
             BluetoothGattCharacteristic.PROPERTY_READ or
                     BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE,
             BluetoothGattCharacteristic.PERMISSION_READ or
@@ -82,7 +86,6 @@ class BluetoothLeService : Service() {
         // invoked when the UI is disconnected from the Service.
         return super.onUnbind(intent)
     }
-
 
     /**
      * Initializes a reference to the local Bluetooth adapter.
@@ -106,7 +109,7 @@ class BluetoothLeService : Service() {
         return mBluetoothAdapter.isEnabled
     }
 
-    fun startAdv() : Boolean {
+    fun startAdv(): Boolean {
         if (isMultipleAdvertisementSupported()) {
             Timber.i("Multiple advertisement supported")
         } else {
@@ -128,7 +131,17 @@ class BluetoothLeService : Service() {
         } else {
             Timber.i("Name not changed")
         }
-        mBluetoothAdvertiser.startAdvertising(mBluetoothAdvParameters, mBleData,mBleDataResponseResponse, mAdvCallback)
+
+        mBluetoothAdvertiser.startAdvertising(
+            mBluetoothAdvParameters,
+            mBleData,
+            mBleDataResponseResponse,
+            mAdvCallback
+        )
+        Handler(Looper.getMainLooper()).postDelayed({
+            stopAdv()
+        }, 100)
+
         return true
     }
 
@@ -162,75 +175,75 @@ class BluetoothLeService : Service() {
         }
     }
 
+    var bluetoothGattServerCallback: BluetoothGattServerCallback =
+        object : BluetoothGattServerCallback() {
+            override fun onConnectionStateChange(
+                device: BluetoothDevice?,
+                status: Int,
+                newState: Int
+            ) {
+                super.onConnectionStateChange(device, status, newState)
+            }
 
-    var bluetoothGattServerCallback: BluetoothGattServerCallback = object : BluetoothGattServerCallback() {
-        override fun onConnectionStateChange(
-            device: BluetoothDevice?,
-            status: Int,
-            newState: Int
-        ) {
-            super.onConnectionStateChange(device, status, newState)
-        }
+            override fun onCharacteristicReadRequest(
+                device: BluetoothDevice?,
+                requestId: Int,
+                offset: Int,
+                characteristic: BluetoothGattCharacteristic?
+            ) {
+                super.onCharacteristicReadRequest(device, requestId, offset, characteristic)
+                //mBluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, YOUR_RESPONSE);
+            }
 
-        override fun onCharacteristicReadRequest(
-            device: BluetoothDevice?,
-            requestId: Int,
-            offset: Int,
-            characteristic: BluetoothGattCharacteristic?
-        ) {
-            super.onCharacteristicReadRequest(device, requestId, offset, characteristic)
-            //mBluetoothGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, YOUR_RESPONSE);
-        }
+            override fun onCharacteristicWriteRequest(
+                device: BluetoothDevice?,
+                requestId: Int,
+                characteristic: BluetoothGattCharacteristic?,
+                preparedWrite: Boolean,
+                responseNeeded: Boolean,
+                offset: Int,
+                value: ByteArray?
+            ) {
+                super.onCharacteristicWriteRequest(
+                    device,
+                    requestId,
+                    characteristic,
+                    preparedWrite,
+                    responseNeeded,
+                    offset,
+                    value
+                )
+            }
 
-        override fun onCharacteristicWriteRequest(
-            device: BluetoothDevice?,
-            requestId: Int,
-            characteristic: BluetoothGattCharacteristic?,
-            preparedWrite: Boolean,
-            responseNeeded: Boolean,
-            offset: Int,
-            value: ByteArray?
-        ) {
-            super.onCharacteristicWriteRequest(
-                device,
-                requestId,
-                characteristic,
-                preparedWrite,
-                responseNeeded,
-                offset,
-                value
-            )
-        }
+            override fun onDescriptorReadRequest(
+                device: BluetoothDevice?,
+                requestId: Int,
+                offset: Int,
+                descriptor: BluetoothGattDescriptor?
+            ) {
+                super.onDescriptorReadRequest(device, requestId, offset, descriptor)
+            }
 
-        override fun onDescriptorReadRequest(
-            device: BluetoothDevice?,
-            requestId: Int,
-            offset: Int,
-            descriptor: BluetoothGattDescriptor?
-        ) {
-            super.onDescriptorReadRequest(device, requestId, offset, descriptor)
+            override fun onDescriptorWriteRequest(
+                device: BluetoothDevice?,
+                requestId: Int,
+                descriptor: BluetoothGattDescriptor?,
+                preparedWrite: Boolean,
+                responseNeeded: Boolean,
+                offset: Int,
+                value: ByteArray?
+            ) {
+                super.onDescriptorWriteRequest(
+                    device,
+                    requestId,
+                    descriptor,
+                    preparedWrite,
+                    responseNeeded,
+                    offset,
+                    value
+                )
+            }
         }
-
-        override fun onDescriptorWriteRequest(
-            device: BluetoothDevice?,
-            requestId: Int,
-            descriptor: BluetoothGattDescriptor?,
-            preparedWrite: Boolean,
-            responseNeeded: Boolean,
-            offset: Int,
-            value: ByteArray?
-        ) {
-            super.onDescriptorWriteRequest(
-                device,
-                requestId,
-                descriptor,
-                preparedWrite,
-                responseNeeded,
-                offset,
-                value
-            )
-        }
-    }
 
     // All BLE characteristic UUIDs are of the form:
     // 0000XXXX-0000-1000-8000-00805f9b34fb
