@@ -9,6 +9,13 @@ import android.content.IntentFilter
 import android.os.*
 import timber.log.Timber
 import java.util.*
+import kotlin.reflect.KFunction1
+import androidx.annotation.NonNull
+
+import android.os.Looper
+
+
+
 
 
 /**
@@ -16,6 +23,8 @@ import java.util.*
  * given Bluetooth LE device.
  */
 class BluetoothLeService : Service() {
+
+    private var onConnectionStatusChange: ((String) -> Unit)? = null
     private val mBluetoothManager: BluetoothManager by lazy {
         getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
     }
@@ -103,7 +112,8 @@ class BluetoothLeService : Service() {
      *
      * @return Return true if the initialization is successful.
      */
-    fun initialize(): Boolean {
+    fun initialize(connectionChangeCallback: KFunction1<String, Unit>): Boolean {
+        onConnectionStatusChange = connectionChangeCallback
         mBluetoothDevices.clear()
         if (!isEnabled()) {
             enableBle()
@@ -190,164 +200,164 @@ class BluetoothLeService : Service() {
         }
     }
 
-    var bluetoothGattServerCallback: BluetoothGattServerCallback =
-        object : BluetoothGattServerCallback() {
-            override fun onConnectionStateChange(
-                device: BluetoothDevice,
-                status: Int,
-                newState: Int
-            ) {
-                super.onConnectionStateChange(device, status, newState)
-                if (status == BluetoothGatt.GATT_SUCCESS) {
-                    if (newState == BluetoothGatt.STATE_CONNECTED) {
-                        mBluetoothDevices.add(device)
-                        Timber.v("Connected to device: " + device.address)
-                    } else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
-                        mBluetoothDevices.remove(device)
-                        Timber.v("Disconnected from device")
-                    }
-                } else {
+    var bluetoothGattServerCallback: BluetoothGattServerCallback = object : BluetoothGattServerCallback() {
+        override fun onConnectionStateChange(
+            device: BluetoothDevice,
+            status: Int,
+            newState: Int
+        ) {
+            super.onConnectionStateChange(device, status, newState)
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                if (newState == BluetoothGatt.STATE_CONNECTED) {
+                    mBluetoothDevices.add(device)
+                    val msg = "Connected to device: " + device.address
+                    Timber.v(msg)
+                    onConnectionStatusChange?.invoke(msg)
+                } else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
                     mBluetoothDevices.remove(device)
-
-                    Timber.e("Error when connecting: $status")
+                    val msg = "Disconnected from device: " + device.address
+                    Timber.v(msg)
+                    onConnectionStatusChange?.invoke("Connected to device: " + device.address)
                 }
-            }
+            } else {
+                mBluetoothDevices.remove(device)
 
-            override fun onCharacteristicReadRequest(
-                device: BluetoothDevice?, requestId: Int, offset: Int,
-                characteristic: BluetoothGattCharacteristic
-            ) {
-                super.onCharacteristicReadRequest(device, requestId, offset, characteristic)
-                Timber.d("Device tried to read characteristic: " + characteristic.uuid)
-                Timber.d("Value: " + Arrays.toString(characteristic.value))
-                if (offset != 0) {
-                    mGattServer.sendResponse(
-                        device,
-                        requestId,
-                        BluetoothGatt.GATT_INVALID_OFFSET,
-                        offset,  /* value (optional) */
-                        null
-                    )
-                    return
-                }
-                mGattServer.sendResponse(
-                    device, requestId, BluetoothGatt.GATT_SUCCESS,
-                    offset, characteristic.value
-                )
-            }
-
-            override fun onNotificationSent(device: BluetoothDevice?, status: Int) {
-                super.onNotificationSent(device, status)
-                Timber.v("Notification sent. Status: $status")
-            }
-
-            override fun onCharacteristicWriteRequest(
-                device: BluetoothDevice?,
-                requestId: Int,
-                characteristic: BluetoothGattCharacteristic?,
-                preparedWrite: Boolean,
-                responseNeeded: Boolean,
-                offset: Int,
-                value: ByteArray?
-            ) {
-                super.onCharacteristicWriteRequest(
-                    device, requestId, characteristic, preparedWrite,
-                    responseNeeded, offset, value
-                )
-                Timber.v("Characteristic Write request: " + Arrays.toString(value))
-                val status = 1
-                if (responseNeeded) {
-                    mGattServer.sendResponse(
-                        device, requestId, status,  /* No need to respond with an offset */
-                        0,  /* No need to respond with a value */
-                        null
-                    )
-                }
-            }
-
-            fun notificationsDisabled(characteristic: BluetoothGattCharacteristic) {
-                if (characteristic.uuid !== UUID.fromString(UUID_THROUGHPUT_MEASUREMENT)) {
-                    return
-                }
-                cancelTimer()
-            }
-
-
-            fun notificationsEnabled(
-                characteristic: BluetoothGattCharacteristic,
-                indicate: Boolean
-            ) {
-                if (characteristic.uuid !== UUID.fromString(UUID_THROUGHPUT_MEASUREMENT)) {
-                    return
-                }
-                if (!indicate) {
-                    return
-                }
-            }
-
-            override fun onDescriptorReadRequest(
-                device: BluetoothDevice?, requestId: Int,
-                offset: Int, descriptor: BluetoothGattDescriptor
-            ) {
-                super.onDescriptorReadRequest(device, requestId, offset, descriptor)
-                Timber.d("Device tried to read descriptor: " + descriptor.uuid)
-                Timber.d("Value: " + Arrays.toString(descriptor.value))
-                if (offset != 0) {
-                    mGattServer.sendResponse(
-                        device,
-                        requestId,
-                        BluetoothGatt.GATT_INVALID_OFFSET,
-                        offset,  /* value (optional) */
-                        null
-                    )
-                    return
-                }
-                mGattServer.sendResponse(
-                    device, requestId, BluetoothGatt.GATT_SUCCESS, offset,
-                    descriptor.value
-                )
-            }
-
-
-            override fun onDescriptorWriteRequest(
-                device: BluetoothDevice?,
-                requestId: Int,
-                descriptor: BluetoothGattDescriptor,
-                preparedWrite: Boolean,
-                responseNeeded: Boolean,
-                offset: Int,
-                value: ByteArray
-            ) {
-                super.onDescriptorWriteRequest(
-                    device, requestId, descriptor, preparedWrite, responseNeeded,
-                    offset, value
-                )
-                Timber.v( "Descriptor Write Request " + descriptor.uuid + " " + Arrays.toString(value)     )
-                var status = BluetoothGatt.GATT_SUCCESS
-                if (descriptor.uuid == UUID.fromString(UUID_THROUGHPUT_MEASUREMENT_DES)) {
-                    val characteristic = descriptor.characteristic
-                    if (value.size != 1) {
-                        status = BluetoothGatt.GATT_INVALID_ATTRIBUTE_LENGTH
-                    } else if (value.contentEquals(byteArrayOf(Direction.BT_TEST_TYPE_RESET.ordinal.toByte()))) {
-                        status = BluetoothGatt.GATT_SUCCESS
-                        descriptor.value = value
-                    }
-                } else {
-                    status = BluetoothGatt.GATT_SUCCESS
-                    descriptor.value = value
-                }
-                if (responseNeeded) {
-                    mGattServer.sendResponse(
-                        device, requestId, status,  /* No need to respond with offset */
-                        0,  /* No need to respond with a value */
-                        null
-                    )
-                }
+                Timber.e("Error when connecting: $status")
             }
         }
 
+        override fun onCharacteristicReadRequest(
+            device: BluetoothDevice?, requestId: Int, offset: Int,
+            characteristic: BluetoothGattCharacteristic
+        ) {
+            super.onCharacteristicReadRequest(device, requestId, offset, characteristic)
+            Timber.d("Device tried to read characteristic: " + characteristic.uuid)
+            Timber.d("Value: " + Arrays.toString(characteristic.value))
+            if (offset != 0) {
+                mGattServer.sendResponse(
+                    device,
+                    requestId,
+                    BluetoothGatt.GATT_INVALID_OFFSET,
+                    offset,  /* value (optional) */
+                    null
+                )
+                return
+            }
+            mGattServer.sendResponse(
+                device, requestId, BluetoothGatt.GATT_SUCCESS,
+                offset, characteristic.value
+            )
+        }
+
+        override fun onNotificationSent(device: BluetoothDevice?, status: Int) {
+            super.onNotificationSent(device, status)
+            Timber.v("Notification sent. Status: $status")
+        }
+
+        override fun onCharacteristicWriteRequest(
+            device: BluetoothDevice?,
+            requestId: Int,
+            characteristic: BluetoothGattCharacteristic?,
+            preparedWrite: Boolean,
+            responseNeeded: Boolean,
+            offset: Int,
+            value: ByteArray?
+        ) {
+            super.onCharacteristicWriteRequest(
+                device, requestId, characteristic, preparedWrite,
+                responseNeeded, offset, value
+            )
+            Timber.v("Characteristic Write request: " + Arrays.toString(value))
+            val status = 1
+            if (responseNeeded) {
+                mGattServer.sendResponse(
+                    device, requestId, status,  /* No need to respond with an offset */
+                    0,  /* No need to respond with a value */
+                    null
+                )
+            }
+        }
+
+        fun notificationsDisabled(characteristic: BluetoothGattCharacteristic) {
+            if (characteristic.uuid !== UUID.fromString(UUID_THROUGHPUT_MEASUREMENT)) {
+                return
+            }
+            cancelTimer()
+        }
 
 
+        fun notificationsEnabled(
+            characteristic: BluetoothGattCharacteristic,
+            indicate: Boolean
+        ) {
+            if (characteristic.uuid !== UUID.fromString(UUID_THROUGHPUT_MEASUREMENT)) {
+                return
+            }
+            if (!indicate) {
+                return
+            }
+        }
+
+        override fun onDescriptorReadRequest(
+            device: BluetoothDevice?, requestId: Int,
+            offset: Int, descriptor: BluetoothGattDescriptor
+        ) {
+            super.onDescriptorReadRequest(device, requestId, offset, descriptor)
+            Timber.d("Device tried to read descriptor: " + descriptor.uuid)
+            Timber.d("Value: " + Arrays.toString(descriptor.value))
+            if (offset != 0) {
+                mGattServer.sendResponse(
+                    device,
+                    requestId,
+                    BluetoothGatt.GATT_INVALID_OFFSET,
+                    offset,  /* value (optional) */
+                    null
+                )
+                return
+            }
+            mGattServer.sendResponse(
+                device, requestId, BluetoothGatt.GATT_SUCCESS, offset,
+                descriptor.value
+            )
+        }
+
+
+        override fun onDescriptorWriteRequest(
+            device: BluetoothDevice?,
+            requestId: Int,
+            descriptor: BluetoothGattDescriptor,
+            preparedWrite: Boolean,
+            responseNeeded: Boolean,
+            offset: Int,
+            value: ByteArray
+        ) {
+            super.onDescriptorWriteRequest(
+                device, requestId, descriptor, preparedWrite, responseNeeded,
+                offset, value
+            )
+            Timber.v( "Descriptor Write Request " + descriptor.uuid + " " + Arrays.toString(value)     )
+            var status = BluetoothGatt.GATT_SUCCESS
+            if (descriptor.uuid == UUID.fromString(UUID_THROUGHPUT_MEASUREMENT_DES)) {
+                val characteristic = descriptor.characteristic
+                if (value.size != 1) {
+                    status = BluetoothGatt.GATT_INVALID_ATTRIBUTE_LENGTH
+                } else if (value.contentEquals(byteArrayOf(Direction.BT_TEST_TYPE_RESET.ordinal.toByte()))) {
+                    status = BluetoothGatt.GATT_SUCCESS
+                    descriptor.value = value
+                }
+            } else {
+                status = BluetoothGatt.GATT_SUCCESS
+                descriptor.value = value
+            }
+            if (responseNeeded) {
+                mGattServer.sendResponse(
+                    device, requestId, status,  /* No need to respond with offset */
+                    0,  /* No need to respond with a value */
+                    null
+                )
+            }
+        }
+    }
 
     // All BLE characteristic UUIDs are of the form:
     // 0000XXXX-0000-1000-8000-00805f9b34fb
@@ -409,13 +419,18 @@ class BluetoothLeService : Service() {
         }
     }
 
-    private fun disconnectFromDevices() {
+    fun disconnectFromDevices() {
         Timber.d("Disconnecting devices...")
-        for (device in mBluetoothManager.getConnectedDevices(
-            BluetoothGattServer.GATT
-        )) {
+        for (device in mBluetoothDevices) {
             Timber.d("Devices: " + device.address + " " + device.name)
             mGattServer.cancelConnection(device)
+            Handler(Looper.getMainLooper()).postDelayed({
+                if (mBluetoothManager.getConnectionState(device, BluetoothGatt.GATT) == BluetoothGatt.STATE_CONNECTED){
+                    Timber.i("Device disconnected: " + device.address)
+                } else {
+                    Timber.i("Device unable to drop connection: " + device.address)
+                }
+            }, 1000)
         }
     }
 }

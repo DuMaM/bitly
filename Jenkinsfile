@@ -1,4 +1,9 @@
 pipeline {
+
+    triggers {
+        githubPush()
+    }
+
     agent {
         docker {
             image "cimg/android:2022.06.1"

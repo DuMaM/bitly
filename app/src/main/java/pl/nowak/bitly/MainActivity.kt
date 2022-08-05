@@ -10,9 +10,8 @@ import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import android.view.View
-import android.widget.ArrayAdapter
 import android.widget.Button
-import android.widget.Spinner
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -29,12 +28,9 @@ import kotlin.random.Random
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var btScan: Button
-    private lateinit var btClear: Button
-    private lateinit var btConnect: Button
-
-    private lateinit var spDevices: Spinner
-    private lateinit var spDevicesArray: ArrayAdapter<String>
+    private lateinit var btAdv: Button
+    private lateinit var btDrop: Button
+    private lateinit var textStatus: TextView
 
     private val multiplePermissions: Int = 100
 
@@ -47,7 +43,7 @@ class MainActivity : AppCompatActivity() {
     private val mServiceConnection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(componentName: ComponentName, service: IBinder) {
             mBluetoothLeService = (service as BluetoothLeService.LocalBinder).service
-            if (!mBluetoothLeService.initialize()) {
+            if (!mBluetoothLeService.initialize(this@MainActivity::updateConnectionStatus)) {
                 Timber.e("Unable to initialize Bluetooth")
                 finish()
             }
@@ -91,7 +87,6 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initGraphs() {
-
         // in this example, a LineChart is initialized from xml
         chart = findViewById<View>(R.id.chartRX) as BarChart
 
@@ -126,6 +121,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        textStatus = this.findViewById(R.id.textConnectionStatus)
         initGraphs()
     }
 
@@ -141,16 +137,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-    }
-
-    private fun addDeviceToView(address: String, name: String): Boolean {
-        var display: String = address
-        if (name.isNotEmpty()) {
-            display += ": $name"
-        }
-
-        runOnUiThread { spDevicesArray.add(display) }
-        return true
     }
 
     override fun onRequestPermissionsResult(
@@ -253,29 +239,23 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    public fun updateConnectionStatus(text: String) {
+        runOnUiThread {
+            textStatus.text = text
+        }
+    }
 
     private fun initBleList() {
-        // init device linear layout
-        spDevicesArray =
-            ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, ArrayList<String>())
-        spDevices = findViewById(R.id.spDevicesView)
-        spDevices.adapter = spDevicesArray
-        spDevices.visibility = View.VISIBLE
-
-        btScan = this.findViewById(R.id.btScanView)
-        btScan.setOnClickListener {
+        btAdv = this.findViewById(R.id.btAdvView)
+        btAdv.setOnClickListener {
             mBluetoothLeService.startAdv()
         }
 
-        btClear = this.findViewById(R.id.btDropView)
-        btClear.setOnClickListener {
+        btDrop = this.findViewById(R.id.btDropView)
+        btDrop.setOnClickListener {
             // bluetoothAdapter.cancelDiscovery()
-            spDevicesArray.clear()
+            mBluetoothLeService.disconnectFromDevices()
         }
 
-        btConnect = this.findViewById(R.id.btConnectView)
-        btConnect.setOnClickListener {
-            val deviceName: String = spDevices.selectedItem.toString()
-        }
     }
 }
