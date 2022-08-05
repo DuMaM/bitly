@@ -267,7 +267,7 @@ class MainActivity : AppCompatActivity() {
             mBluetoothLeService.startAdv()
         }
 
-        btClear = this.findViewById(R.id.btCleanView)
+        btClear = this.findViewById(R.id.btDropView)
         btClear.setOnClickListener {
             // bluetoothAdapter.cancelDiscovery()
             spDevicesArray.clear()
