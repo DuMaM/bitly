@@ -6,12 +6,12 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.graphics.Color
-import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import android.view.View
 import android.widget.Button
 import android.widget.TextView
+import androidx.annotation.RequiresPermission
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -134,11 +134,6 @@ class MainActivity : AppCompatActivity() {
         checkBlePermission()
     }
 
-
-    override fun onDestroy() {
-        super.onDestroy()
-    }
-
     override fun onRequestPermissionsResult(
         requestCode: Int, permissions: Array<String>,
         grantResults: IntArray
@@ -169,27 +164,17 @@ class MainActivity : AppCompatActivity() {
     // function to check permissions
     private fun checkBlePermission() {
         val permRequest = {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                Timber.d("Requesting permissions for app BLE connect, scan, location, admin")
-                requestPermissions(
-                    arrayOf(
-                        Manifest.permission.BLUETOOTH_ADMIN,
-                        Manifest.permission.ACCESS_FINE_LOCATION,
-                        Manifest.permission.BLUETOOTH_ADVERTISE,
-                        Manifest.permission.ACCESS_COARSE_LOCATION,
-                        Manifest.permission.BLUETOOTH_SCAN,
-                        Manifest.permission.BLUETOOTH_CONNECT
-                    ), multiplePermissions
-                )
-            } else {
-                Timber.d("Requesting permissions for app BLE location and admin")
-                requestPermissions(
-                    arrayOf(
-                        Manifest.permission.BLUETOOTH_ADMIN,
-                        Manifest.permission.ACCESS_FINE_LOCATION
-                    ), multiplePermissions
-                )
-            }
+            Timber.d("Requesting permissions for app BLE connect, scan, location, admin")
+            requestPermissions(
+                arrayOf(
+                    Manifest.permission.BLUETOOTH_ADMIN,
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.BLUETOOTH_ADVERTISE,
+                    Manifest.permission.ACCESS_COARSE_LOCATION,
+                    Manifest.permission.BLUETOOTH_SCAN,
+                    Manifest.permission.BLUETOOTH_CONNECT
+                ), multiplePermissions
+            )
         }
 
         if ((ContextCompat.checkSelfPermission(
@@ -233,18 +218,17 @@ class MainActivity : AppCompatActivity() {
                 )
             ) {
                 permRequest()
-            } else {
-                permRequest()
             }
         }
     }
 
-    public fun updateConnectionStatus(text: String) {
+    fun updateConnectionStatus(text: String) {
         runOnUiThread {
             textStatus.text = text
         }
     }
 
+    @RequiresPermission(allOf = ["android.permission.BLUETOOTH_CONNECT", "android.permission.BLUETOOTH_ADVERTISE"])
     private fun initBleList() {
         btAdv = this.findViewById(R.id.btAdvView)
         btAdv.setOnClickListener {
@@ -256,6 +240,5 @@ class MainActivity : AppCompatActivity() {
             // bluetoothAdapter.cancelDiscovery()
             mBluetoothLeService.disconnectFromDevices()
         }
-
     }
 }

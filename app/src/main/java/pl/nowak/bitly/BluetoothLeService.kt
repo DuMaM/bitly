@@ -156,7 +156,7 @@ class BluetoothLeService : Service() {
         )
         Handler(Looper.getMainLooper()).postDelayed({
             stopAdv()
-        }, 100)
+        }, 10000)
 
         return true
     }
@@ -213,7 +213,7 @@ class BluetoothLeService : Service() {
                         mBluetoothDevices.remove(device)
                         val msg = "Disconnected from device: " + device.address
                         Timber.v(msg)
-                        onConnectionStatusChange?.invoke("Connected to device: " + device.address)
+                        onConnectionStatusChange?.invoke(msg)
                     }
                 } else {
                     mBluetoothDevices.remove(device)
