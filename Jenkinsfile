@@ -10,7 +10,7 @@ pipeline {
 
     agent {
         docker {
-            image "cimg/android:2022.06.1"
+            image "cimg/android:2022.07"
         }
     }
 
