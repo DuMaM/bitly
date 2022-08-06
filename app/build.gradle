@@ -4,6 +4,8 @@ plugins {
     id 'checkstyle'
 }
 
+apply from: 'versioning.gradle'
+
 android {
     compileSdk 31
     ndkVersion '23.1.7779620'
@@ -14,8 +16,8 @@ android {
         applicationId "pl.nowak.bitly"
         minSdk 31
         targetSdk 31
-        versionCode 1
-        versionName "1.0.0"
+        version getVersionTag()
+        versionCode getVersionCode()
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
