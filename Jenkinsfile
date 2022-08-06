@@ -1,8 +1,16 @@
 pipeline {
+
+    triggers {
+        githubPush()
+    }
+
+    options {
+      skipDefaultCheckout true
+    }
+
     agent {
         docker {
-            image "cimg/android:2022.06.1"
-            args "--rm --interactive"
+            image "cimg/android:2022.07"
         }
     }
 
@@ -14,7 +22,7 @@ pipeline {
         }
         stage("build") {
             steps {
-                sh "gradle build"
+                sh "./gradlew build"
             }
         }
     }
