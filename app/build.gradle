@@ -16,8 +16,8 @@ android {
         applicationId "pl.nowak.bitly"
         minSdk 31
         targetSdk 31
-        version getVersionTag()
-        versionCode getVersionCode()
+        versionCode getVersionCodeFromGit()
+        versionName getVersionNameFromGit()
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -26,6 +26,21 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+
+        // add the code from below line
+        applicationVariants.all {
+                // this method is use to rename your all apk weather
+                // it may be signed or unsigned(debug apk)
+            variant ->
+                variant.outputs.each {
+                        // on below line we are setting
+                        // a name to our apk as GFG.apk
+                    output ->
+                        // on below line we are adding version name to
+                        // our .apk file along with the app name
+                        output.outputFileName = "${rootProject.name}-${variant.versionName}-${variant.buildType.name}.apk"
+                }
         }
     }
     compileOptions {

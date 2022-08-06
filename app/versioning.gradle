@@ -1,20 +1,23 @@
-def getVersionCode() {
+def getVersionCodeFromGit() {
     def stdout = ''
     try {
+        project.logger.lifecycle "Fetching version code from ${project.projectDir}"
         stdout = new ByteArrayOutputStream()
         exec {
             commandLine "git", "rev-list", "HEAD", "--count"
             standardOutput = stdout
         }
 
-        return Integer.parseInt(stdout.toString().trim())
+        def ret = Integer.parseInt(stdout.toString().trim())
+        project.logger.lifecycle "Current code version: $ret"
+        return ret
     } catch (exception) {
-        println "Error: " + exception.getMessage()
-        return -1
+        project.logger.error "Error: " + exception.getMessage()
+        return 1
     }
 }
 
-def getVersionTag() {
+def getVersionNameFromGit() {
     def stdout = ''
     try {
         stdout = new ByteArrayOutputStream()
@@ -22,16 +25,17 @@ def getVersionTag() {
             commandLine "git", "describe", "--tags", "--dirty"
             standardOutput = stdout
         }
-
-        return stdout.toString().trim()
+        def ret = stdout.toString().trim()
+        project.logger.lifecycle "Current name version: $ret"
+        return ret
     } catch (exception) {
-        println "Error: " + exception.getMessage()
+        project.logger.error "Error: " + exception.getMessage()
         return "0.0.1"
     }
 }
 
 // Export methods by turning them into closures
 ext {
-    getVersionTag = this.&getVersionTag
-    getVersionCode = this.&getVersionCode
+    getVersionCodeFromGit = this.&getVersionCodeFromGit
+    getVersionNameFromGit = this.&getVersionNameFromGit
 }
