@@ -24,6 +24,11 @@ pipeline {
             steps {
                 sh "./gradlew build"
             }
+            post {
+                always {
+                    archiveArtifacts allowEmptyArchive: true, artifacts: '*.apk', fingerprint: true, followSymlinks: false, onlyIfSuccessful: true
+                }
+            }
         }
     }
 }
