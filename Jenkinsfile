@@ -4,6 +4,10 @@ pipeline {
         githubPush()
     }
 
+    options {
+      skipDefaultCheckout true
+    }
+
     agent {
         docker {
             image "cimg/android:2022.06.1"
