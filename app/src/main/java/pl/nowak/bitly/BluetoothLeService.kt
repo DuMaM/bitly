@@ -1,5 +1,6 @@
 package pl.nowak.bitly
 
+import android.annotation.SuppressLint
 import android.app.Service
 import android.bluetooth.*
 import android.bluetooth.le.*
@@ -10,7 +11,6 @@ import android.os.*
 import timber.log.Timber
 import java.util.*
 import kotlin.reflect.KFunction1
-import androidx.annotation.NonNull
 
 import android.os.Looper
 
@@ -22,6 +22,7 @@ import android.os.Looper
  * Service for managing connection and data communication with a GATT server hosted on a
  * given Bluetooth LE device.
  */
+@SuppressLint("MissingPermission")
 class BluetoothLeService : Service() {
 
     private var onConnectionStatusChange: ((String) -> Unit)? = null
@@ -31,9 +32,6 @@ class BluetoothLeService : Service() {
     private val mBluetoothAdapter: BluetoothAdapter by lazy {
         val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         bluetoothManager.adapter
-    }
-    private val mBluetoothLEScanner: BluetoothLeScanner by lazy {
-        mBluetoothAdapter.bluetoothLeScanner
     }
     private val mBluetoothAdvertiser: BluetoothLeAdvertiser by lazy {
         mBluetoothAdapter.bluetoothLeAdvertiser
@@ -68,9 +66,9 @@ class BluetoothLeService : Service() {
             get() = this@BluetoothLeService
     }
 
-    private val mMatrics: Metrics = Metrics()
+    private val mMetrics: Metrics = Metrics()
 
-    override fun onBind(intent: Intent): IBinder? {
+    override fun onBind(intent: Intent): IBinder {
         if (!isEnabled()) {
             mBluetoothAdapter.enable()
             Timber.i("Enabling bluetooth")
@@ -122,7 +120,7 @@ class BluetoothLeService : Service() {
         return true
     }
 
-    fun isEnabled(): Boolean {
+    private fun isEnabled(): Boolean {
         if (!mBluetoothAdapter.isEnabled) {
             Timber.i("Bluetooth is not enabled")
         } else {
@@ -167,7 +165,7 @@ class BluetoothLeService : Service() {
         return true
     }
 
-    fun stopAdv() {
+    private fun stopAdv() {
         // Can also stop and restart the advertising
         currentAdvertisingSet?.enableAdvertising(false, 0, 0)
         // Wait for onAdvertisingEnabled callback...
@@ -200,7 +198,7 @@ class BluetoothLeService : Service() {
         }
     }
 
-    var bluetoothGattServerCallback: BluetoothGattServerCallback = object : BluetoothGattServerCallback() {
+    private var bluetoothGattServerCallback: BluetoothGattServerCallback = object : BluetoothGattServerCallback() {
         override fun onConnectionStateChange(
             device: BluetoothDevice,
             status: Int,
@@ -335,7 +333,7 @@ class BluetoothLeService : Service() {
                 device, requestId, descriptor, preparedWrite, responseNeeded,
                 offset, value
             )
-            Timber.v( "Descriptor Write Request " + descriptor.uuid + " " + Arrays.toString(value)     )
+            Timber.v( "Descriptor Write Request " + descriptor.uuid + " " + value.contentToString())
             var status = BluetoothGatt.GATT_SUCCESS
             if (descriptor.uuid == UUID.fromString(UUID_THROUGHPUT_MEASUREMENT_DES)) {
                 val characteristic = descriptor.characteristic
@@ -360,7 +358,7 @@ class BluetoothLeService : Service() {
     }
 
     // All BLE characteristic UUIDs are of the form:
-    // 0000XXXX-0000-1000-8000-00805f9b34fb
+    // 00001234-0000-1000-8000-00805f9b34fb
     // The assigned number for the Heart Rate Measurement characteristic UUID is
     // listed as 0x2A37, which is how the developer of the sample code could arrive at:
     // 00002a37-0000-1000-8000-00805f9b34fb
@@ -369,11 +367,6 @@ class BluetoothLeService : Service() {
         private const val STATE_CONNECTING = 1
         private const val STATE_CONNECTED = 2
 
-        const val ACTION_GATT_CONNECTED = "com.example.bluetooth.le.ACTION_GATT_CONNECTED"
-        const val ACTION_GATT_DISCONNECTED = "com.example.bluetooth.le.ACTION_GATT_DISCONNECTED"
-        const val ACTION_GATT_SERVICES_DISCOVERED = "com.example.bluetooth.le.ACTION_GATT_SERVICES_DISCOVERED"
-        const val ACTION_DATA_AVAILABLE = "com.example.bluetooth.le.ACTION_DATA_AVAILABLE"
-        const val EXTRA_DATA = "com.example.bluetooth.le.EXTRA_DATA"
         const val UUID_THROUGHPUT_MEASUREMENT = "0483dadd-6c9d-6ca9-5d41-03ad4fff4abb"
         const val UUID_THROUGHPUT_MEASUREMENT_CHAR = "00001524-0000-1000-8000-00805f9b34fb"
         const val UUID_THROUGHPUT_MEASUREMENT_DES = "00001525-0000-1000-8000-00805f9b34fb"
@@ -396,7 +389,7 @@ class BluetoothLeService : Service() {
         startTimer(measurementIntervalValue)
     }
 
-    fun isMultipleAdvertisementSupported(): Boolean {
+    private fun isMultipleAdvertisementSupported(): Boolean {
         return mBluetoothAdapter.isMultipleAdvertisementSupported
     }
 
@@ -410,7 +403,6 @@ class BluetoothLeService : Service() {
         // Don't forget to unregister the ACTION_FOUND receiver.
     }
 
-    private val REQUEST_ENABLE_BT = 1
     private fun ensureBleFeaturesAvailable() {
          if (!mBluetoothAdapter.isEnabled) {
             // Make sure bluetooth is enabled.
