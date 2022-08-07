@@ -34,8 +34,26 @@ def getVersionNameFromGit() {
     }
 }
 
+def setOutputName(applicationVariants) {
+    // add the code from below line
+    applicationVariants.all {
+            // this method is use to rename your all apk weather
+            // it may be signed or unsigned(debug apk)
+        variant ->
+            variant.outputs.each {
+                    // on below line we are setting
+                    // a name to our apk as GFG.apk
+                output ->
+                    // on below line we are adding version name to
+                    // our .apk file along with the app name
+                    output.outputFileName = "${rootProject.name}-${variant.versionName}-${variant.buildType.name}.apk"
+            }
+    }
+}
+
 // Export methods by turning them into closures
 ext {
     getVersionCodeFromGit = this.&getVersionCodeFromGit
     getVersionNameFromGit = this.&getVersionNameFromGit
+    setOutputName = this.&setOutputName
 }
