@@ -1,5 +1,4 @@
 pipeline {
-
     triggers {
         githubPush()
     }
@@ -21,6 +20,7 @@ pipeline {
                 checkout scm
             }
         }
+
         stage("build") {
             steps {
                 sh "./gradlew build"
@@ -32,6 +32,7 @@ pipeline {
             }
         }
     }
+
     post {
       aborted {
         unstable 'Build got aborted'
