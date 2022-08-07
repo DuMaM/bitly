@@ -279,7 +279,7 @@ class BluetoothLeService : Service() {
                 if (characteristic.uuid !== UUID.fromString(UUID_THROUGHPUT_MEASUREMENT)) {
                     return
                 }
-                cancelTimer()
+                mMetrics.stop()
             }
 
 
@@ -372,24 +372,6 @@ class BluetoothLeService : Service() {
         const val UUID_THROUGHPUT_MEASUREMENT_DES = "00001525-0000-1000-8000-00805f9b34fb"
     }
 
-    private var mTimer: Timer = Timer()
-    private fun startTimer(intervalSec: Int) {
-        mTimer.schedule(object : TimerTask() {
-            override fun run() {
-                Timber.i("Timer started")
-            }
-        }, 0, (intervalSec * 1000).toLong())
-    }
-
-    private fun cancelTimer() {
-        mTimer.cancel()
-    }
-
-    private fun resetTimer(measurementIntervalValue: Int) {
-        cancelTimer()
-        startTimer(measurementIntervalValue)
-    }
-
     private fun isMultipleAdvertisementSupported(): Boolean {
         return mBluetoothAdapter.isMultipleAdvertisementSupported
     }
@@ -432,4 +414,3 @@ class BluetoothLeService : Service() {
         }
     }
 }
-

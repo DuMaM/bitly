@@ -27,7 +27,6 @@ import kotlin.random.Random
 
 
 class MainActivity : AppCompatActivity() {
-
     private lateinit var btAdv: Button
     private lateinit var btDrop: Button
     private lateinit var textStatus: TextView
