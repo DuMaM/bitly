@@ -6,6 +6,7 @@ pipeline {
 
     options {
       skipDefaultCheckout true
+      disableConcurrentBuilds abortPrevious: true
     }
 
     agent {
@@ -30,5 +31,10 @@ pipeline {
                 }
             }
         }
+    }
+    post {
+      aborted {
+        unstable 'Build got aborted'
+      }
     }
 }
