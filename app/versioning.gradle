@@ -1,0 +1,59 @@
+def getVersionCodeFromGit() {
+    def stdout = ''
+    try {
+        project.logger.lifecycle "Fetching version code from ${project.projectDir}"
+        stdout = new ByteArrayOutputStream()
+        exec {
+            commandLine "git", "rev-list", "HEAD", "--count"
+            standardOutput = stdout
+        }
+
+        def ret = Integer.parseInt(stdout.toString().trim())
+        project.logger.lifecycle "Current code version: $ret"
+        return ret
+    } catch (exception) {
+        project.logger.error "Error: " + exception.getMessage()
+        return 1
+    }
+}
+
+def getVersionNameFromGit() {
+    def stdout = ''
+    try {
+        stdout = new ByteArrayOutputStream()
+        exec {
+            commandLine "git", "describe", "--tags", "--dirty"
+            standardOutput = stdout
+        }
+        def ret = stdout.toString().trim()
+        project.logger.lifecycle "Current name version: $ret"
+        return ret
+    } catch (exception) {
+        project.logger.error "Error: " + exception.getMessage()
+        return "0.0.1"
+    }
+}
+
+def setOutputName(applicationVariants) {
+    // add the code from below line
+    applicationVariants.all {
+            // this method is use to rename your all apk weather
+            // it may be signed or unsigned(debug apk)
+        variant ->
+            variant.outputs.each {
+                    // on below line we are setting
+                    // a name to our apk as GFG.apk
+                output ->
+                    // on below line we are adding version name to
+                    // our .apk file along with the app name
+                    output.outputFileName = "${rootProject.name}-${variant.versionName}-${variant.buildType.name}.apk"
+            }
+    }
+}
+
+// Export methods by turning them into closures
+ext {
+    getVersionCodeFromGit = this.&getVersionCodeFromGit
+    getVersionNameFromGit = this.&getVersionNameFromGit
+    setOutputName = this.&setOutputName
+}

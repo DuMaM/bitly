@@ -70,7 +70,6 @@ class BluetoothLeService : Service() {
             Timber.i("Bluetooth is working")
         }
 
-
         val characteristic = BluetoothGattCharacteristic(
             UUID.fromString(UUID_THROUGHPUT_MEASUREMENT_CHAR),
             BluetoothGattCharacteristic.PROPERTY_READ or
