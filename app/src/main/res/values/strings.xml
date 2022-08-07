@@ -2,7 +2,7 @@
     <string name="app_name">Bitly</string>
     <string name="btnScanView">Scan</string>
     <string name="btnDropView">Disconnect</string>
-    <string name="textConnectionStatus">Disconnected</string>
+    <string name="textConnectionStatus">DISCONNECTED</string>
     <string name="statsSpeedLabel">speed: 0kbps</string>
     <string name="statsPingLabel">ping: 0ms</string>
     <string name="statsJitterLabel">jitter: 0ms</string>

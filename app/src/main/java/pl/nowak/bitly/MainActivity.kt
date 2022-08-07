@@ -236,7 +236,7 @@ class MainActivity : AppCompatActivity() {
 
     fun updateConnectionStatus(text: String) {
         runOnUiThread {
-            textStatus.text = text
+            textStatus.text = text.uppercase()
         }
     }
 
