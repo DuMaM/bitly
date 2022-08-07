@@ -22,7 +22,7 @@ class Metrics {
         /** Number of bytes received. */
         var writeLen: UInt = 0u
 
-        /** Transfer speed in bits per second. */
+        /** Transfer speed in bits per second (kbps). */
         var writeRate: UInt = 0u
 
         /** error count if BER is enabled. **/

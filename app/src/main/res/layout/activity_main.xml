@@ -79,7 +79,7 @@
         app:layout_constraintStart_toEndOf="@+id/textTransferSpeedView"
         app:layout_constraintTop_toTopOf="@+id/textTransferSpeedView" />
 
-    <com.github.mikephil.charting.charts.BarChart
+    <pl.nowak.bitly.SmallChart
         android:id="@+id/chartTransferSpeedView"
         android:layout_width="@dimen/stats_width"
         android:layout_height="60dp"
@@ -87,7 +87,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textTransferSpeedView" />
 
-    <com.github.mikephil.charting.charts.BarChart
+    <pl.nowak.bitly.SmallChart
         android:id="@+id/chartPingView"
         android:layout_width="@dimen/stats_width"
         android:layout_height="60dp"
@@ -95,7 +95,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textPingView" />
 
-    <com.github.mikephil.charting.charts.BarChart
+    <pl.nowak.bitly.SmallChart
         android:id="@+id/chartJitterView"
         android:layout_width="@dimen/stats_width"
         android:layout_height="60dp"

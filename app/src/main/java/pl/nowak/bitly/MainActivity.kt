@@ -38,13 +38,16 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var mBluetoothLeService: BluetoothLeService
 
+    private lateinit var mJitterView: SmallChart
+    private lateinit var mPingView: SmallChart
+    private lateinit var mTransferSpeed: SmallChart
+
     // Code to manage Service lifecycle.
     private val mServiceConnection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(componentName: ComponentName, service: IBinder) {
             mBluetoothLeService = (service as BluetoothLeService.LocalBinder).service
             if (!mBluetoothLeService.initialize(this@MainActivity::updateConnectionStatus)) {
                 Timber.e("Unable to initialize Bluetooth")
-                finish()
             }
         }
 
@@ -118,8 +121,19 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // init activity
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        // init mini graphs
+        mJitterView = findViewById<SmallChart>(R.id.chartJitterView)
+        mPingView = findViewById<SmallChart>(R.id.chartPingView)
+        mTransferSpeed = findViewById<SmallChart>(R.id.chartTransferSpeedView)
+        mJitterView.default()
+        mPingView.default()
+        mTransferSpeed.default()
+
+
         textStatus = this.findViewById(R.id.textConnectionStatus)
         initGraphs()
     }
@@ -152,7 +166,6 @@ class MainActivity : AppCompatActivity() {
                         ) == PackageManager.PERMISSION_GRANTED
                     ) {
                         Timber.i("${permissions[index]} Granted access")
-
                     }
                 }
                 return
