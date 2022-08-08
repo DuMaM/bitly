@@ -47,8 +47,11 @@ class SmallChart : LineChart {
                     notifyDataSetChanged()
                     invalidate()
                 }
+
+                // update current state
+                numberOfData = data.entryCount
             }
-        }, 0, 1000)
+        }, 0, 5000)
     }
 
     private fun cancelTimer() {
@@ -58,6 +61,7 @@ class SmallChart : LineChart {
     fun default() {
         val vl = LineDataSet(ArrayList(), "Data")
         val holoBlue = Color.rgb(51, 181, 229)
+        val holeDarkBlue = Color.rgb(103, 134, 147)
 
         // draw only space without line and dots
         vl.setDrawFilled(true)
@@ -77,19 +81,29 @@ class SmallChart : LineChart {
         axisRight.isEnabled = false
 
         axisLeft.setDrawGridLines(true)
-        axisLeft.setDrawLabels(true)
-        axisLeft.isEnabled = false
-        axisLeft.setPosition(YAxis.YAxisLabelPosition.INSIDE_CHART)
+        // labels settings
+        axisLeft.setDrawLabels(false)
+        axisLeft.setPosition(YAxis.YAxisLabelPosition.OUTSIDE_CHART)
+        axisLeft.isEnabled = true
         axisLeft.setDrawGridLines(true)
         axisLeft.isGranularityEnabled = true
-        axisLeft.axisMinimum = -1f
-        axisLeft.axisMaximum = 1f
+        axisLeft.granularity = 1f
+        axisLeft.setDrawGridLinesBehindData(false)
+        axisLeft.gridColor = holeDarkBlue
+        axisLeft.setDrawAxisLine(false)
 
+        axisLeft.axisMinimum = -1f
+        axisLeft.axisMaximum = 10f
 
         // incognito mode for X axis
         xAxis.setDrawLabels(false)
         xAxis.labelRotationAngle = 0f
         xAxis.isEnabled = false
+        xAxis.setDrawGridLines(false)
+        xAxis.setCenterAxisLabels(true)
+        xAxis.setDrawAxisLine(false)
+        xAxis.setDrawGridLines(false)
+        xAxis.position = XAxis.XAxisPosition.TOP_INSIDE
 
         // incognito mode for char obj
         legend.isEnabled = false

@@ -126,9 +126,9 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         // init mini graphs
-        mJitterView = findViewById<SmallChart>(R.id.chartJitterView)
-        mPingView = findViewById<SmallChart>(R.id.chartPingView)
-        mTransferSpeed = findViewById<SmallChart>(R.id.chartTransferSpeedView)
+        mJitterView = findViewById(R.id.chartJitterView)
+        mPingView = findViewById(R.id.chartPingView)
+        mTransferSpeed = findViewById(R.id.chartTransferSpeedView)
         mJitterView.default()
         mPingView.default()
         mTransferSpeed.default()
