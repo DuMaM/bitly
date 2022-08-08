@@ -6,6 +6,7 @@ import android.util.AttributeSet
 import com.github.mikephil.charting.animation.Easing
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.XAxis
+import com.github.mikephil.charting.components.YAxis
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
@@ -20,7 +21,7 @@ class SmallChart : LineChart {
     private var numberOfData: Int = 0
 
     fun moveVisibleWindow(min: Float, max: Float) {
-        val x: XAxis = getXAxis()
+        val x: XAxis = xAxis
         if (min > 0) {
             x.axisMinimum = min
         }
@@ -55,28 +56,44 @@ class SmallChart : LineChart {
     }
 
     fun default() {
-        val vl = LineDataSet(ArrayList<Entry>(), "Data")
-        xAxis.labelRotationAngle = 0f
+        val vl = LineDataSet(ArrayList(), "Data")
+        val holoBlue = Color.rgb(51, 181, 229)
 
+        // draw only space without line and dots
         vl.setDrawFilled(true)
         vl.setDrawValues(false)
+        vl.setDrawCircleHole(false)
+        vl.setDrawCircles(false)
         vl.lineWidth = 0f
-        vl.fillColor = Color.LTGRAY
-        vl.fillAlpha = Color.LTGRAY
+
+        vl.fillColor = holoBlue
+        vl.fillAlpha = holoBlue
+        vl.color = holoBlue
         data = LineData(vl)
 
+        // incognito mode in Y axis
+        axisRight.setDrawGridLines(true)
+        axisRight.setDrawLabels(false)
         axisRight.isEnabled = false
+
+        axisLeft.setDrawGridLines(true)
+        axisLeft.setDrawLabels(true)
         axisLeft.isEnabled = false
+        axisLeft.setPosition(YAxis.YAxisLabelPosition.INSIDE_CHART)
+        axisLeft.setDrawGridLines(true)
+        axisLeft.isGranularityEnabled = true
+        axisLeft.axisMinimum = -1f
+        axisLeft.axisMaximum = 1f
 
-        // incognito mode
+
+        // incognito mode for X axis
+        xAxis.setDrawLabels(false)
+        xAxis.labelRotationAngle = 0f
+        xAxis.isEnabled = false
+
+        // incognito mode for char obj
+        legend.isEnabled = false
         description.isEnabled = false
-        getAxisLeft().setDrawLabels(false)
-        getAxisRight().setDrawLabels(false)
-        getXAxis().setDrawLabels(false)
-        getLegend().setEnabled(false)
-
-
-        // setVisibleXRangeMaximum(20f)
 
         // touching do not help at all here on small charts
         setTouchEnabled(false)
