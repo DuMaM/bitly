@@ -3,7 +3,7 @@ package pl.nowak.bitly
 import timber.log.Timber
 
 
-enum class Direction {
+enum class BleTestType {
     BT_TEST_TYPE_UNKNOWN,
     BT_TEST_TYPE_RESET,
     BT_TEST_TYPE_SIMPLE,
@@ -36,25 +36,30 @@ class Metrics {
         }
     }
 
-    private val mMetric = Data()
+    var mBleTestType: BleTestType = BleTestType.BT_TEST_TYPE_UNKNOWN
+    private var mData = Data()
     private var mDelta: Long = -1
     private var mStart: Long = -1
 
     fun dumpStats() {
-        Timber.i("[local] sent $mMetric.write_len bytes ($mMetric.write_len_KB KB) in $mDelta ms at $mMetric.write_rate kbps")
+        Timber.i("[local] sent $mData.write_len bytes ($mData.write_len_KB KB) in $mDelta ms at $mData.write_rate kbps")
     }
 
-    fun updateMetric(writeLen: Int, writeCount: Int, berError: Int){
+    fun updateMetric(writeLen: Int, writeCount: Int, berError: Int) {
         updateTimer()
-        mMetric.writeCount += writeCount.toUInt()
-        mMetric.writeLen += writeLen.toUInt()
-        mMetric.errorCount += berError
-        mMetric.writeRate = ((mMetric.writeLen * 8u).toLong() / mDelta).toUInt()
+        mData.writeCount += writeCount.toUInt()
+        mData.writeLen += writeLen.toUInt()
+        mData.errorCount += berError
+        mData.writeRate = ((mData.writeLen * 8u).toLong() / mDelta).toUInt()
     }
 
     fun start() {
         startTimer()
-        mMetric.clean()
+        mData.clean()
+    }
+
+    fun reset() {
+        start()
     }
 
     fun stop() {

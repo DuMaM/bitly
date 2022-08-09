@@ -28,6 +28,20 @@ class SmallChart : LineChart {
         x.axisMaximum = max
     }
 
+    fun updateData(input: Float, refresh: Boolean = true) {
+        val min: Float = (numberOfData - 15).toFloat()
+        val max: Float = (numberOfData + 5).toFloat()
+        moveVisibleWindow(min, max)
+
+        data.addEntry(Entry(numberOfData.toFloat(), input), 0)
+
+        if (refresh) {
+            data.notifyDataChanged()
+            notifyDataSetChanged()
+            invalidate()
+        }
+    }
+
     // used for drawing the line chart
     // when no data is not sent
     private val mTimer: Timer = Timer()
@@ -37,15 +51,7 @@ class SmallChart : LineChart {
             override fun run() {
                 if (data.entryCount <= numberOfData) {
                     numberOfData = data.entryCount + 1
-
-                    val min: Float = (numberOfData - 15).toFloat()
-                    val max: Float = (numberOfData + 5).toFloat()
-                    moveVisibleWindow(min, max)
-
-                    data.addEntry(Entry(numberOfData.toFloat(), 0f), 0)
-                    data.notifyDataChanged()
-                    notifyDataSetChanged()
-                    invalidate()
+                    updateData(0f)
                 }
 
                 // update current state

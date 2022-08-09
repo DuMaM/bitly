@@ -7,12 +7,13 @@ import android.bluetooth.*
 import android.bluetooth.le.*
 import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.os.*
 import androidx.annotation.RequiresPermission
 import timber.log.Timber
 import java.util.*
+import kotlin.experimental.and
 import kotlin.reflect.KFunction1
+
 
 /**
  * Service for managing connection and data communication with a GATT server hosted on a
@@ -216,7 +217,6 @@ class BluetoothLeService : Service() {
                     }
                 } else {
                     mBluetoothDevices.remove(device)
-
                     Timber.e("Error when connecting: $status")
                 }
             }
@@ -265,10 +265,35 @@ class BluetoothLeService : Service() {
                     responseNeeded, offset, value
                 )
                 Timber.v("Characteristic Write request: " + Arrays.toString(value))
-                val status = 1
+                var status = BluetoothGatt.GATT_REQUEST_NOT_SUPPORTED
+                if (characteristic?.uuid == UUID.fromString(UUID_THROUGHPUT_MEASUREMENT)) {
+
+                    when (mMetrics.mBleTestType) {
+                        BleTestType.BT_TEST_TYPE_ANALOG -> {
+                            Timber.i("Received analog test data")
+                        }
+                        BleTestType.BT_TEST_TYPE_BER -> {
+                            Timber.i("Received BER test data")
+                        }
+                        BleTestType.BT_TEST_TYPE_SIM -> {
+                            Timber.i("Received simulator test data")
+                        }
+                        BleTestType.BT_TEST_TYPE_SIMPLE -> {
+                            Timber.i("Received simple test data")
+                        }
+                        else -> {
+                            Timber.i("Received BER test data")
+                        }
+                    }
+
+                    status = BluetoothGatt.GATT_SUCCESS
+                }
+
                 if (responseNeeded) {
                     mGattServer.sendResponse(
-                        device, requestId, status,  /* No need to respond with an offset */
+                        device,
+                        requestId,
+                        status,  /* No need to respond with an offset */
                         0,  /* No need to respond with a value */
                         null
                     )
@@ -330,18 +355,49 @@ class BluetoothLeService : Service() {
                 value: ByteArray
             ) {
                 super.onDescriptorWriteRequest(
-                    device, requestId, descriptor, preparedWrite, responseNeeded,
-                    offset, value
+                    device,
+                    requestId,
+                    descriptor,
+                    preparedWrite,
+                    responseNeeded,
+                    offset,
+                    value
                 )
                 Timber.v("Descriptor Write Request " + descriptor.uuid + " " + value.contentToString())
                 var status = BluetoothGatt.GATT_SUCCESS
                 if (descriptor.uuid == UUID.fromString(UUID_THROUGHPUT_MEASUREMENT_DES)) {
-                    val characteristic = descriptor.characteristic
                     if (value.size != 1) {
                         status = BluetoothGatt.GATT_INVALID_ATTRIBUTE_LENGTH
-                    } else if (value.contentEquals(byteArrayOf(Direction.BT_TEST_TYPE_RESET.ordinal.toByte()))) {
+                    } else {
                         status = BluetoothGatt.GATT_SUCCESS
                         descriptor.value = value
+
+                        var testType: Int = BleTestType.BT_TEST_TYPE_UNKNOWN.ordinal
+                        for (b in value) {
+                            testType = (testType shl 8) + (b and 0xFF.toByte())
+                        }
+
+                        when (testType) {
+                            BleTestType.BT_TEST_TYPE_RESET.ordinal -> {
+                                mMetrics.reset()
+                                mMetrics.mBleTestType = BleTestType.BT_TEST_TYPE_UNKNOWN
+                            }
+                            BleTestType.BT_TEST_TYPE_ANALOG.ordinal -> {
+                                mMetrics.mBleTestType = BleTestType.BT_TEST_TYPE_ANALOG
+                            }
+                            BleTestType.BT_TEST_TYPE_BER.ordinal -> {
+                                mMetrics.mBleTestType = BleTestType.BT_TEST_TYPE_BER
+                            }
+                            BleTestType.BT_TEST_TYPE_SIM.ordinal -> {
+                                mMetrics.mBleTestType = BleTestType.BT_TEST_TYPE_SIM
+                            }
+                            BleTestType.BT_TEST_TYPE_SIMPLE.ordinal -> {
+                                mMetrics.mBleTestType = BleTestType.BT_TEST_TYPE_SIMPLE
+                            }
+                            else -> {
+                                mMetrics.mBleTestType = BleTestType.BT_TEST_TYPE_UNKNOWN
+                            }
+                        }
                     }
                 } else {
                     status = BluetoothGatt.GATT_SUCCESS
@@ -379,7 +435,6 @@ class BluetoothLeService : Service() {
     private fun enableBle() {
         Timber.i("There is possibility to use bluetooth")
         // Register for broadcasts when a device is discovered.
-        val filter = IntentFilter(BluetoothDevice.ACTION_FOUND)
     }
 
     private fun disableBle() {

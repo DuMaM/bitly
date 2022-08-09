@@ -133,8 +133,9 @@ class MainActivity : AppCompatActivity() {
         mPingView.default()
         mTransferSpeed.default()
 
-
+        // init status text
         textStatus = this.findViewById(R.id.textConnectionStatus)
+
         initGraphs()
     }
 
