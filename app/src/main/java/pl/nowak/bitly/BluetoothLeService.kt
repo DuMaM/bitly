@@ -197,6 +197,10 @@ class BluetoothLeService : Service() {
 
     private var bluetoothGattServerCallback: BluetoothGattServerCallback =
         object : BluetoothGattServerCallback() {
+            override fun onMtuChanged(device: BluetoothDevice?, mtu: Int) {
+                Timber.w("ATT MTU changed to $mtu")
+            }
+
             override fun onConnectionStateChange(
                 device: BluetoothDevice,
                 status: Int,

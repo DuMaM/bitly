@@ -123,6 +123,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         // init activity
         super.onCreate(savedInstanceState)
+        checkBlePermission()
         setContentView(R.layout.activity_main)
 
         // init mini graphs
@@ -141,11 +142,11 @@ class MainActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        checkBlePermission()
+
         val gattServiceIntent = Intent(this, BluetoothLeService::class.java)
         bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE)
         initBleList()
-
-        checkBlePermission()
     }
 
     override fun onRequestPermissionsResult(
