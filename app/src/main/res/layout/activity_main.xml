@@ -11,7 +11,7 @@
         android:id="@+id/btAdvView"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="24dp"
+        android:layout_marginStart="@dimen/wall_spacing"
         android:layout_marginTop="24dp"
         android:layout_marginEnd="8dp"
         android:text="@string/btnScanView"
@@ -24,40 +24,114 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
-        android:layout_marginTop="24dp"
-        android:layout_marginEnd="24dp"
+        android:layout_marginEnd="@dimen/wall_spacing"
         android:text="@string/btnDropView"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/btAdvView"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="@+id/btAdvView" />
 
     <TextView
         android:id="@+id/textConnectionStatus"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="24dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="24dp"
+        android:layout_marginStart="@dimen/wall_spacing"
+        android:layout_marginTop="24dp"
+        android:layout_marginEnd="@dimen/wall_spacing"
         android:layout_weight="24"
+        android:gravity="center_horizontal|center_vertical"
         android:singleLine="true"
         android:text="@string/textConnectionStatus"
+        android:textAlignment="center"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/btAdvView" />
 
+    <TextView
+        android:id="@+id/textTransferSpeedView"
+        android:layout_width="@dimen/stats_width"
+        android:layout_height="30dp"
+        android:layout_marginStart="@dimen/wall_spacing"
+        android:layout_marginTop="24dp"
+        android:autoSizeTextType="none"
+        android:gravity="center_horizontal|center_vertical"
+        android:text="@string/statsSpeedLabel"
+        android:textAlignment="center"
+        android:textSize="@dimen/stats_font_size"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textConnectionStatus" />
+
+    <TextView
+        android:id="@+id/textPingView"
+        android:layout_width="@dimen/stats_width"
+        android:layout_height="30dp"
+        android:layout_marginEnd="@dimen/wall_spacing"
+        android:gravity="center_horizontal|center_vertical"
+        android:text="@string/statsPingLabel"
+        android:textAlignment="center"
+        android:textSize="@dimen/stats_font_size"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/textJitterView" />
+
+    <TextView
+        android:id="@+id/textJitterView"
+        android:layout_width="@dimen/stats_width"
+        android:layout_height="30dp"
+        android:gravity="center_horizontal|center_vertical"
+        android:text="@string/statsJitterLabel"
+        android:textAlignment="center"
+        android:textSize="@dimen/stats_font_size"
+        app:layout_constraintEnd_toStartOf="@+id/textPingView"
+        app:layout_constraintStart_toEndOf="@+id/textTransferSpeedView"
+        app:layout_constraintTop_toTopOf="@+id/textTransferSpeedView" />
+
+    <pl.nowak.bitly.SmallChart
+        android:id="@+id/chartTransferSpeedView"
+        android:layout_width="@dimen/stats_width"
+        android:layout_height="@dimen/stats_height"
+        android:layout_marginStart="@dimen/wall_spacing"
+        android:background="@drawable/small_chart_border"
+        android:padding="0dp"
+        android:paddingHorizontal="0dp"
+        android:paddingVertical="0dp"
+        android:paddingStart="0dp"
+        android:paddingLeft="0dp"
+        android:paddingTop="0dp"
+        android:paddingEnd="0dp"
+        android:paddingRight="0dp"
+        android:paddingBottom="0dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textTransferSpeedView" />
+
+    <pl.nowak.bitly.SmallChart
+        android:id="@+id/chartPingView"
+        android:layout_width="@dimen/stats_width"
+        android:layout_height="@dimen/stats_height"
+        android:layout_marginEnd="@dimen/wall_spacing"
+        android:background="@drawable/small_chart_border"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/textPingView" />
+
+    <pl.nowak.bitly.SmallChart
+        android:id="@+id/chartJitterView"
+        android:layout_width="@dimen/stats_width"
+        android:layout_height="@dimen/stats_height"
+        android:background="@drawable/small_chart_border"
+        app:layout_constraintEnd_toStartOf="@+id/chartPingView"
+        app:layout_constraintStart_toEndOf="@+id/chartTransferSpeedView"
+        app:layout_constraintTop_toBottomOf="@+id/textJitterView" />
+
     <ScrollView
+        android:id="@+id/scrollView2"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginStart="24dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="24dp"
-        android:layout_marginBottom="16dp"
+        android:layout_marginStart="@dimen/wall_spacing"
+        android:layout_marginEnd="@dimen/wall_spacing"
         app:flow_maxElementsWrap="2"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHeight_max="wrap"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textConnectionStatus"
+        app:layout_constraintTop_toTopOf="@+id/guideline4"
         app:layout_constraintWidth_max="wrap">
 
         <LinearLayout
@@ -83,5 +157,13 @@
             </com.github.mikephil.charting.charts.BarChart>
         </LinearLayout>
     </ScrollView>
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="0.5"
+        app:layout_constraintTop_toTopOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -27,7 +27,6 @@ import kotlin.random.Random
 
 
 class MainActivity : AppCompatActivity() {
-
     private lateinit var btAdv: Button
     private lateinit var btDrop: Button
     private lateinit var textStatus: TextView
@@ -39,13 +38,16 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var mBluetoothLeService: BluetoothLeService
 
+    private lateinit var mJitterView: SmallChart
+    private lateinit var mPingView: SmallChart
+    private lateinit var mTransferSpeed: SmallChart
+
     // Code to manage Service lifecycle.
     private val mServiceConnection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(componentName: ComponentName, service: IBinder) {
             mBluetoothLeService = (service as BluetoothLeService.LocalBinder).service
             if (!mBluetoothLeService.initialize(this@MainActivity::updateConnectionStatus)) {
                 Timber.e("Unable to initialize Bluetooth")
-                finish()
             }
         }
 
@@ -119,19 +121,32 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // init activity
         super.onCreate(savedInstanceState)
+        checkBlePermission()
         setContentView(R.layout.activity_main)
+
+        // init mini graphs
+        mJitterView = findViewById(R.id.chartJitterView)
+        mPingView = findViewById(R.id.chartPingView)
+        mTransferSpeed = findViewById(R.id.chartTransferSpeedView)
+        mJitterView.default()
+        mPingView.default()
+        mTransferSpeed.default()
+
+        // init status text
         textStatus = this.findViewById(R.id.textConnectionStatus)
+
         initGraphs()
     }
 
     override fun onResume() {
         super.onResume()
+        checkBlePermission()
+
         val gattServiceIntent = Intent(this, BluetoothLeService::class.java)
         bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE)
         initBleList()
-
-        checkBlePermission()
     }
 
     override fun onRequestPermissionsResult(
@@ -153,7 +168,6 @@ class MainActivity : AppCompatActivity() {
                         ) == PackageManager.PERMISSION_GRANTED
                     ) {
                         Timber.i("${permissions[index]} Granted access")
-
                     }
                 }
                 return
@@ -224,7 +238,7 @@ class MainActivity : AppCompatActivity() {
 
     fun updateConnectionStatus(text: String) {
         runOnUiThread {
-            textStatus.text = text
+            textStatus.text = text.uppercase()
         }
     }
 
