@@ -8,7 +8,6 @@ import android.content.pm.PackageManager
 import android.graphics.Color
 import android.os.Bundle
 import android.os.IBinder
-import android.view.View
 import android.widget.Button
 import android.widget.TextView
 import androidx.annotation.RequiresPermission
@@ -21,21 +20,32 @@ import com.github.mikephil.charting.data.BarData
 import com.github.mikephil.charting.data.BarDataSet
 import com.github.mikephil.charting.data.BarEntry
 import com.github.mikephil.charting.utils.ColorTemplate
+import pl.nowak.bitly.databinding.ActivityMainBinding
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
 import kotlin.random.Random
 
 
 class MainActivity : AppCompatActivity() {
+    // view
+    private lateinit var binding: ActivityMainBinding
+
+    // view labels
     private lateinit var btAdv: Button
     private lateinit var btDrop: Button
     private lateinit var textStatus: TextView
 
-    private val multiplePermissions: Int = 100
-
+    // view charts - big
     private lateinit var chart: BarChart
     private lateinit var chartBER: BarChart
 
+    // view charts - small
+    private lateinit var mJitterView: SmallChart
+    private lateinit var mPingView: SmallChart
+    private lateinit var mTransferSpeed: SmallChart
+
+    // service
+    private val multiplePermissions: Int = 100
     private lateinit var mBluetoothLeService: BluetoothLeService
 
     private lateinit var mJitterView: SmallChart
@@ -90,7 +100,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun initGraphs() {
         // in this example, a LineChart is initialized from xml
-        chart = findViewById<View>(R.id.chartRX) as BarChart
+        chart = binding.chartRX
 
         // enable touch gestures
         chart.setTouchEnabled(true)
@@ -105,7 +115,7 @@ class MainActivity : AppCompatActivity() {
         chart.data = data
 
         // in this example, a LineChart is initialized from xml
-        chartBER = findViewById<View>(R.id.chartBER) as BarChart
+        chartBER = binding.chartBER
 
         // enable touch gestures
         chartBER.setTouchEnabled(true)
@@ -123,19 +133,22 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         // init activity
         super.onCreate(savedInstanceState)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
         checkBlePermission()
         setContentView(R.layout.activity_main)
 
         // init mini graphs
-        mJitterView = findViewById(R.id.chartJitterView)
-        mPingView = findViewById(R.id.chartPingView)
-        mTransferSpeed = findViewById(R.id.chartTransferSpeedView)
+        mJitterView = binding.chartJitterView
+        mPingView = binding.chartPingView
+        mTransferSpeed = binding.chartTransferSpeedView
         mJitterView.default()
         mPingView.default()
         mTransferSpeed.default()
 
         // init status text
-        textStatus = this.findViewById(R.id.textConnectionStatus)
+        textStatus = binding.textConnectionStatus
 
         initGraphs()
     }
@@ -244,12 +257,12 @@ class MainActivity : AppCompatActivity() {
 
     @RequiresPermission(allOf = ["android.permission.BLUETOOTH_CONNECT", "android.permission.BLUETOOTH_ADVERTISE"])
     private fun initBleList() {
-        btAdv = this.findViewById(R.id.btAdvView)
+        btAdv = binding.btAdvView
         btAdv.setOnClickListener {
             mBluetoothLeService.startAdv()
         }
 
-        btDrop = this.findViewById(R.id.btDropView)
+        btDrop = binding.btDropView
         btDrop.setOnClickListener {
             // bluetoothAdapter.cancelDiscovery()
             mBluetoothLeService.disconnectFromDevices()
