@@ -47,11 +47,7 @@ class MainActivity : AppCompatActivity() {
     // service
     private val multiplePermissions: Int = 100
     private lateinit var mBluetoothLeService: BluetoothLeService
-
-    private lateinit var mJitterView: SmallChart
-    private lateinit var mPingView: SmallChart
-    private lateinit var mTransferSpeed: SmallChart
-
+    
     // Code to manage Service lifecycle.
     private val mServiceConnection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(componentName: ComponentName, service: IBinder) {
