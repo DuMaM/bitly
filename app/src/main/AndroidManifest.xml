@@ -28,7 +28,7 @@
         android:required="true" />
 
     <application
-        android:name=".BitlyApplication"
+        android:name=".ApplicationBitly"
         android:fullBackupOnly="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"

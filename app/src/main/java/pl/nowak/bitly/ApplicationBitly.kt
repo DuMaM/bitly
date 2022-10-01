@@ -3,7 +3,7 @@ package pl.nowak.bitly
 import android.app.Application
 import timber.log.Timber
 
-class BitlyApplication: Application() {
+class ApplicationBitly : Application() {
     override fun onCreate() {
         super.onCreate()
         Timber.plant(Timber.DebugTree())
