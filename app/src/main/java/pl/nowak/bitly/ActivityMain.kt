@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit
 import kotlin.random.Random
 
 
-class MainActivity : AppCompatActivity() {
+class ActivityMain : AppCompatActivity() {
     // view
     private lateinit var binding: ActivityMainBinding
 
@@ -39,20 +39,15 @@ class MainActivity : AppCompatActivity() {
     private lateinit var chart: BarChart
     private lateinit var chartBER: BarChart
 
-    // view charts - small
-    private lateinit var mJitterView: SmallChart
-    private lateinit var mPingView: SmallChart
-    private lateinit var mTransferSpeed: SmallChart
-
     // service
     private val multiplePermissions: Int = 100
     private lateinit var mBluetoothLeService: BluetoothLeService
-    
+
     // Code to manage Service lifecycle.
     private val mServiceConnection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(componentName: ComponentName, service: IBinder) {
             mBluetoothLeService = (service as BluetoothLeService.LocalBinder).service
-            if (!mBluetoothLeService.initialize(this@MainActivity::updateConnectionStatus)) {
+            if (!mBluetoothLeService.initialize(this@ActivityMain::updateConnectionStatus)) {
                 Timber.e("Unable to initialize Bluetooth")
             }
         }
@@ -135,14 +130,6 @@ class MainActivity : AppCompatActivity() {
         checkBlePermission()
         setContentView(R.layout.activity_main)
 
-        // init mini graphs
-        mJitterView = binding.chartJitterView
-        mPingView = binding.chartPingView
-        mTransferSpeed = binding.chartTransferSpeedView
-        mJitterView.default()
-        mPingView.default()
-        mTransferSpeed.default()
-
         // init status text
         textStatus = binding.textConnectionStatus
 
@@ -172,7 +159,7 @@ class MainActivity : AppCompatActivity() {
                 grantResults.forEachIndexed { index, it ->
                     if (it == PackageManager.PERMISSION_GRANTED &&
                         ContextCompat.checkSelfPermission(
-                            this@MainActivity,
+                            this@ActivityMain,
                             permissions[index]
                         ) == PackageManager.PERMISSION_GRANTED
                     ) {
@@ -201,42 +188,42 @@ class MainActivity : AppCompatActivity() {
         }
 
         if ((ContextCompat.checkSelfPermission(
-                this@MainActivity,
+                this@ActivityMain,
                 Manifest.permission.BLUETOOTH_ADMIN
             ) +
                     ContextCompat.checkSelfPermission(
-                        this@MainActivity,
+                        this@ActivityMain,
                         Manifest.permission.BLUETOOTH_CONNECT
                     ) +
                     ContextCompat.checkSelfPermission(
-                        this@MainActivity,
+                        this@ActivityMain,
                         Manifest.permission.BLUETOOTH_ADVERTISE
                     ) +
                     ContextCompat.checkSelfPermission(
-                        this@MainActivity,
+                        this@ActivityMain,
                         Manifest.permission.ACCESS_FINE_LOCATION
                     ) +
                     ContextCompat.checkSelfPermission(
-                        this@MainActivity,
+                        this@ActivityMain,
                         Manifest.permission.ACCESS_COARSE_LOCATION
                     ))
             != PackageManager.PERMISSION_GRANTED
         ) {
 
             if (ActivityCompat.shouldShowRequestPermissionRationale(
-                    this@MainActivity,
+                    this@ActivityMain,
                     Manifest.permission.BLUETOOTH_ADMIN
                 ) ||
                 ActivityCompat.shouldShowRequestPermissionRationale(
-                    this@MainActivity,
+                    this@ActivityMain,
                     Manifest.permission.BLUETOOTH_CONNECT
                 ) ||
                 ActivityCompat.shouldShowRequestPermissionRationale(
-                    this@MainActivity,
+                    this@ActivityMain,
                     Manifest.permission.BLUETOOTH_ADVERTISE
                 ) ||
                 ActivityCompat.shouldShowRequestPermissionRationale(
-                    this@MainActivity,
+                    this@ActivityMain,
                     Manifest.permission.ACCESS_FINE_LOCATION
                 )
             ) {
