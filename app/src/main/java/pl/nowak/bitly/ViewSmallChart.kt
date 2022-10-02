@@ -13,7 +13,7 @@ import com.github.mikephil.charting.data.LineDataSet
 import java.util.*
 
 
-class SmallChart : LineChart {
+class ViewSmallChart : LineChart {
     constructor(ctx: Context) : super(ctx)
     constructor(ctx: Context, attrs: AttributeSet) : super(ctx, attrs)
     constructor(ctx: Context, attrs: AttributeSet, defStyle: Int) : super(ctx, attrs, defStyle)
