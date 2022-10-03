@@ -8,13 +8,13 @@ import android.content.pm.PackageManager
 import android.graphics.Color
 import android.os.Bundle
 import android.os.IBinder
-import android.widget.Button
 import android.widget.TextView
 import androidx.annotation.RequiresPermission
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.github.mikephil.charting.charts.BarChart
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.github.mikephil.charting.components.YAxis.AxisDependency
 import com.github.mikephil.charting.data.BarData
 import com.github.mikephil.charting.data.BarDataSet
@@ -30,14 +30,10 @@ class ActivityMain : AppCompatActivity() {
     // view
     private lateinit var binding: ActivityMainBinding
 
-    // view labels
-    private lateinit var btAdv: Button
-    private lateinit var btDrop: Button
     private lateinit var textStatus: TextView
 
-    // view charts - big
-    private lateinit var chart: BarChart
-    private lateinit var chartBER: BarChart
+    // ecg recycle view
+    private lateinit var ecgCharts: RecyclerView
 
     // service
     private val multiplePermissions: Int = 100
@@ -89,38 +85,6 @@ class ActivityMain : AppCompatActivity() {
         return data
     }
 
-    private fun initGraphs() {
-        // in this example, a LineChart is initialized from xml
-        chart = binding.chartRX
-
-        // enable touch gestures
-        chart.setTouchEnabled(true)
-
-        // enable scaling and dragging
-        chart.isDragEnabled = true
-        chart.setScaleEnabled(true)
-        chart.isHighlightPerDragEnabled = true
-
-        // set an alternative background color
-        val data = setData(20, 0.4)
-        chart.data = data
-
-        // in this example, a LineChart is initialized from xml
-        chartBER = binding.chartBER
-
-        // enable touch gestures
-        chartBER.setTouchEnabled(true)
-
-        // enable scaling and dragging
-        chartBER.isDragEnabled = true
-        chartBER.setScaleEnabled(true)
-        chartBER.isHighlightPerDragEnabled = true
-
-        // set an alternative background color
-        chartBER.data = setData(30, 0.3)
-
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         // init activity
         super.onCreate(savedInstanceState)
@@ -133,7 +97,16 @@ class ActivityMain : AppCompatActivity() {
         // init status text
         textStatus = binding.textConnectionStatus
 
-        initGraphs()
+        // recycle view
+        ecgCharts = binding.recycleChartList
+        val adapter = AdapterChartList()
+        adapter.charts.add(4.3F)
+        adapter.charts.add(3.3F)
+        adapter.charts.add(4.3F)
+        adapter.charts.add(3.3F)
+
+        ecgCharts.adapter = adapter
+        ecgCharts.layoutManager = LinearLayoutManager(this)
     }
 
     override fun onResume() {
@@ -142,7 +115,6 @@ class ActivityMain : AppCompatActivity() {
 
         val gattServiceIntent = Intent(this, BluetoothLeService::class.java)
         bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE)
-        initBleList()
     }
 
     override fun onRequestPermissionsResult(
@@ -239,16 +211,13 @@ class ActivityMain : AppCompatActivity() {
     }
 
     @RequiresPermission(allOf = ["android.permission.BLUETOOTH_CONNECT", "android.permission.BLUETOOTH_ADVERTISE"])
-    private fun initBleList() {
-        btAdv = binding.btAdvView
-        btAdv.setOnClickListener {
-            mBluetoothLeService.startAdv()
-        }
-
-        btDrop = binding.btDropView
-        btDrop.setOnClickListener {
-            // bluetoothAdapter.cancelDiscovery()
-            mBluetoothLeService.disconnectFromDevices()
-        }
+    fun advertise() {
+        mBluetoothLeService.startAdv()
     }
+
+    @RequiresPermission(allOf = ["android.permission.BLUETOOTH_CONNECT", "android.permission.BLUETOOTH_ADVERTISE"])
+    fun disconnect() {
+        mBluetoothLeService.disconnectFromDevices()
+    }
+
 }

@@ -44,7 +44,7 @@
         app:layout_constraintStart_toEndOf="@+id/textTransferSpeedView"
         app:layout_constraintTop_toTopOf="@+id/textTransferSpeedView" />
 
-    <pl.nowak.bitly.SmallChart
+    <pl.nowak.bitly.ViewSmallChart
         android:id="@+id/chartTransferSpeedView"
         android:layout_width="@dimen/stats_width"
         android:layout_height="@dimen/stats_height"
@@ -62,7 +62,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textTransferSpeedView" />
 
-    <pl.nowak.bitly.SmallChart
+    <pl.nowak.bitly.ViewSmallChart
         android:id="@+id/chartPingView"
         android:layout_width="@dimen/stats_width"
         android:layout_height="@dimen/stats_height"
@@ -71,7 +71,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textPingView" />
 
-    <pl.nowak.bitly.SmallChart
+    <pl.nowak.bitly.ViewSmallChart
         android:id="@+id/chartJitterView"
         android:layout_width="@dimen/stats_width"
         android:layout_height="@dimen/stats_height"

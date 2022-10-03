@@ -3,13 +3,13 @@ package pl.nowak.bitly
 import timber.log.Timber
 
 
-enum class BleTestType {
-    BT_TEST_TYPE_UNKNOWN,
-    BT_TEST_TYPE_RESET,
-    BT_TEST_TYPE_SIMPLE,
-    BT_TEST_TYPE_BER,
-    BT_TEST_TYPE_ANALOG,
-    BT_TEST_TYPE_SIM
+enum class BleTestType(val type: Int) {
+    BT_TEST_TYPE_UNKNOWN(0),
+    BT_TEST_TYPE_RESET(1),
+    BT_TEST_TYPE_SIMPLE(2),
+    BT_TEST_TYPE_BER(3),
+    BT_TEST_TYPE_ANALOG(4),
+    BT_TEST_TYPE_SIM(5)
 }
 
 class Metrics {

@@ -2,18 +2,19 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".ActivityMain">
-
 
     <Button
         android:id="@+id/btAdvView"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/wall_spacing"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="@dimen/wall_spacing"
         android:layout_marginEnd="8dp"
+        android:onClick="@{()-> advertise()}"
         android:text="@string/btnScanView"
         app:layout_constraintEnd_toStartOf="@+id/btDropView"
         app:layout_constraintStart_toStartOf="parent"
@@ -23,8 +24,9 @@
         android:id="@+id/btDropView"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
+        android:layout_marginStart="@dimen/wall_spacing"
         android:layout_marginEnd="@dimen/wall_spacing"
+        android:onClick="@{()-> disconnect()}"
         android:text="@string/btnDropView"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/btAdvView"
@@ -35,9 +37,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/wall_spacing"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="@dimen/wall_spacing"
         android:layout_marginEnd="@dimen/wall_spacing"
-        android:layout_weight="24"
         android:gravity="center_horizontal|center_vertical"
         android:singleLine="true"
         android:text="@string/textConnectionStatus"
@@ -46,42 +47,16 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/btAdvView" />
 
-    <ScrollView
-        android:id="@+id/scrollView2"
-        android:layout_width="0dp"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycleChartList"
+        android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginStart="@dimen/wall_spacing"
+        android:layout_marginTop="@dimen/wall_spacing"
         android:layout_marginEnd="@dimen/wall_spacing"
-        app:flow_maxElementsWrap="2"
+        android:layout_marginBottom="@dimen/wall_spacing"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHeight_max="wrap"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/textConnectionStatus"
-        app:layout_constraintWidth_max="wrap">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="vertical">
-
-            <com.github.mikephil.charting.charts.BarChart
-                android:id="@+id/chartRX"
-                android:layout_width="match_parent"
-                android:layout_height="200dp"
-                android:layout_weight="24">
-
-            </com.github.mikephil.charting.charts.BarChart>
-
-            <com.github.mikephil.charting.charts.BarChart
-                android:id="@+id/chartBER"
-                android:layout_width="match_parent"
-                android:layout_height="200dp"
-                android:layout_weight="24">
-
-            </com.github.mikephil.charting.charts.BarChart>
-        </LinearLayout>
-    </ScrollView>
+        app:layout_constraintTop_toBottomOf="@+id/textConnectionStatus" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

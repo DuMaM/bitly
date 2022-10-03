@@ -10,9 +10,9 @@ class ActivityStats : AppCompatActivity() {
     private lateinit var binding: ActivityStatsBinding
 
     // view charts - small
-    private lateinit var mJitterView: SmallChart
-    private lateinit var mPingView: SmallChart
-    private lateinit var mTransferSpeed: SmallChart
+    private lateinit var mJitterView: ViewSmallChart
+    private lateinit var mPingView: ViewSmallChart
+    private lateinit var mTransferSpeed: ViewSmallChart
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // init activity
