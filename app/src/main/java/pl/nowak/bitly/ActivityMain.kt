@@ -77,34 +77,38 @@ class ActivityMain : AppCompatActivity() {
     }
 
     override fun onRequestPermissionsResult(
-        requestCode: Int, permissions: Array<String>,
+        requestCode: Int,
+        permissions: Array<String>,
         grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        when (requestCode) {
-            multiplePermissions -> {
-                if (grantResults.isEmpty()) {
-                    Timber.e("Not granted access")
-                    return
-                }
-                grantResults.forEachIndexed { index, it ->
-                    if (it == PackageManager.PERMISSION_GRANTED &&
-                        ContextCompat.checkSelfPermission(
-                            this@ActivityMain,
-                            permissions[index]
-                        ) == PackageManager.PERMISSION_GRANTED
-                    ) {
-                        Timber.i("${permissions[index]} Granted access")
-                    } else {
-                        Toast.makeText(
-                            applicationContext,
-                            "Please grant us ${permissions[index]}",
-                            Toast.LENGTH_SHORT
-                        )
-                    }
-                }
-                return
+
+        val checkGranted = checkGranted@{
+            if (grantResults.isEmpty()) {
+                Timber.e("Not granted access")
+                return@checkGranted
             }
+
+            grantResults.forEachIndexed { index, it ->
+                if (it == PackageManager.PERMISSION_GRANTED &&
+                    ContextCompat.checkSelfPermission(
+                        this@ActivityMain,
+                        permissions[index]
+                    ) == PackageManager.PERMISSION_GRANTED
+                ) {
+                    Timber.i("${permissions[index]} Granted access")
+                } else {
+                    Toast.makeText(
+                        applicationContext,
+                        "Please grant us ${permissions[index]}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+        }
+
+        when (requestCode) {
+            multiplePermissions -> checkGranted()
         }
     }
 
@@ -127,7 +131,7 @@ class ActivityMain : AppCompatActivity() {
                         applicationContext,
                         "Please allow for this permission ${item}",
                         Toast.LENGTH_SHORT
-                    )
+                    ).show()
                 } else {
                     permRequest()
                 }
