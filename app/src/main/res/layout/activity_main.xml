@@ -1,62 +1,74 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
 
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
     tools:context=".ActivityMain">
 
-    <Button
-        android:id="@+id/btAdvView"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/wall_spacing"
-        android:layout_marginTop="@dimen/wall_spacing"
-        android:layout_marginEnd="8dp"
-        android:onClick="@{()-> advertise()}"
-        android:text="@string/btnScanView"
-        app:layout_constraintEnd_toStartOf="@+id/btDropView"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
 
-    <Button
-        android:id="@+id/btDropView"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/wall_spacing"
-        android:layout_marginEnd="@dimen/wall_spacing"
-        android:onClick="@{()-> disconnect()}"
-        android:text="@string/btnDropView"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/btAdvView"
-        app:layout_constraintTop_toTopOf="@+id/btAdvView" />
+    <data>
 
-    <TextView
-        android:id="@+id/textConnectionStatus"
+        <import type="pl.nowak.bitly.ActivityMain" />
+
+        <variable
+            name="act"
+            type="pl.nowak.bitly.ActivityMain" />
+    </data>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="@dimen/wall_spacing"
-        android:layout_marginTop="@dimen/wall_spacing"
-        android:layout_marginEnd="@dimen/wall_spacing"
-        android:gravity="center_horizontal|center_vertical"
-        android:singleLine="true"
-        android:text="@string/textConnectionStatus"
-        android:textAlignment="center"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btAdvView" />
+        android:layout_height="match_parent">
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/recycleChartList"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_marginStart="@dimen/wall_spacing"
-        android:layout_marginTop="@dimen/wall_spacing"
-        android:layout_marginEnd="@dimen/wall_spacing"
-        android:layout_marginBottom="@dimen/wall_spacing"
-        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textConnectionStatus" />
+        <Button
+            android:id="@+id/btAdvView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/wall_spacing"
+            android:layout_marginTop="@dimen/wall_spacing"
+            android:layout_marginEnd="8dp"
+            android:onClick="@{()-> act.advertise()}"
+            android:text="@string/btnScanView"
+            app:layout_constraintEnd_toStartOf="@+id/btDropView"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <Button
+            android:id="@+id/btDropView"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/wall_spacing"
+            android:layout_marginEnd="@dimen/wall_spacing"
+            android:onClick="@{() -> act.disconnect()}"
+            android:text="@string/btnDropView"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/btAdvView"
+            app:layout_constraintTop_toTopOf="@+id/btAdvView" />
+
+        <TextView
+            android:id="@+id/textConnectionStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/wall_spacing"
+            android:layout_marginTop="@dimen/wall_spacing"
+            android:layout_marginEnd="@dimen/wall_spacing"
+            android:gravity="center_horizontal|center_vertical"
+            android:singleLine="true"
+            android:text="@string/textConnectionStatus"
+            android:textAlignment="center"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/btAdvView" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycleChartList"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginStart="@dimen/wall_spacing"
+            android:layout_marginTop="@dimen/wall_spacing"
+            android:layout_marginEnd="@dimen/wall_spacing"
+            android:layout_marginBottom="@dimen/wall_spacing"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/textConnectionStatus" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

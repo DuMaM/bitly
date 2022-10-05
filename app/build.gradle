@@ -39,7 +39,7 @@ android {
         jvmTarget = '11'
     }
     buildFeatures {
-        //   dataBinding = true
+        dataBinding = true
         viewBinding = true
     }
     namespace 'pl.nowak.bitly'
@@ -52,6 +52,7 @@ dependencies {
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     implementation 'com.google.android.material:material:1.6.1'
     implementation 'androidx.legacy:legacy-support-core-utils:1.0.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
 
     // ktx
     // NOTE: version 1.9.0 do not support api lower then 33
