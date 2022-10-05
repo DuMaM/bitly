@@ -19,6 +19,8 @@ class ViewSmallChart : LineChart {
     constructor(ctx: Context, attrs: AttributeSet, defStyle: Int) : super(ctx, attrs, defStyle)
 
     private var numberOfData: Int = 0
+    val holoBlue = Color.rgb(51, 181, 229)
+    val holeDarkBlue = Color.rgb(103, 134, 147)
 
     fun moveVisibleWindow(min: Float, max: Float) {
         val x: XAxis = xAxis
@@ -64,11 +66,7 @@ class ViewSmallChart : LineChart {
         mTimer.cancel()
     }
 
-    fun default() {
-        val vl = LineDataSet(ArrayList(), "Data")
-        val holoBlue = Color.rgb(51, 181, 229)
-        val holeDarkBlue = Color.rgb(103, 134, 147)
-
+    fun defaultDataSettings(vl: LineDataSet): LineDataSet {
         // draw only space without line and dots
         vl.setDrawFilled(true)
         vl.setDrawValues(false)
@@ -79,6 +77,11 @@ class ViewSmallChart : LineChart {
         vl.fillColor = holoBlue
         vl.fillAlpha = holoBlue
         vl.color = holoBlue
+        return vl
+    }
+
+    fun default() {
+        val vl = defaultDataSettings(LineDataSet(ArrayList(), "Data"))
         data = LineData(vl)
 
         // incognito mode in Y axis

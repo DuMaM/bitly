@@ -9,13 +9,13 @@ apply from: 'versioning.gradle'
 android {
     compileSdk 32
     ndkVersion '23.1.7779620'
-    buildToolsVersion '32.0.0'
-    compileSdkVersion 32
+    buildToolsVersion '31.0.0'
+    compileSdkVersion 31
 
     defaultConfig {
         applicationId "pl.nowak.bitly"
-        minSdk 32
-        targetSdk 32
+        minSdk 31
+        targetSdk 31
         versionCode getVersionCodeFromGit()
         versionName getVersionNameFromGit()
 

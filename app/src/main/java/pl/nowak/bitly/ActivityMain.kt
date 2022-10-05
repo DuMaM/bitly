@@ -5,31 +5,23 @@ import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
 import android.content.pm.PackageManager
-import android.graphics.Color
 import android.os.Bundle
 import android.os.IBinder
 import android.widget.TextView
+import android.widget.Toast
 import androidx.annotation.RequiresPermission
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.github.mikephil.charting.components.YAxis.AxisDependency
-import com.github.mikephil.charting.data.BarData
-import com.github.mikephil.charting.data.BarDataSet
-import com.github.mikephil.charting.data.BarEntry
-import com.github.mikephil.charting.utils.ColorTemplate
 import pl.nowak.bitly.databinding.ActivityMainBinding
 import timber.log.Timber
-import java.util.concurrent.TimeUnit
-import kotlin.random.Random
 
 
 class ActivityMain : AppCompatActivity() {
     // view
     private lateinit var binding: ActivityMainBinding
-
     private lateinit var textStatus: TextView
 
     // ecg recycle view
@@ -52,39 +44,6 @@ class ActivityMain : AppCompatActivity() {
         }
     }
 
-    private fun setData(count: Int, range: Double): BarData {
-        // now in hours
-        val now: Long = TimeUnit.MILLISECONDS.toHours(System.currentTimeMillis())
-        val values: ArrayList<BarEntry> = ArrayList()
-
-        // count = hours
-        val to = (now + count).toFloat()
-
-        // increment by 1 hour
-        var x = now.toFloat()
-        while (x < to) {
-            val y: Double = Random.nextDouble(range, 50.0)
-            values.add(BarEntry(x, y.toFloat())) // add one entry per hour
-            x++
-        }
-
-        // create a dataset and give it a type
-        val set1 = BarDataSet(values, "DataSet 1")
-        set1.axisDependency = AxisDependency.LEFT
-        set1.color = ColorTemplate.getHoloBlue()
-        set1.valueTextColor = ColorTemplate.getHoloBlue()
-        set1.setDrawValues(false)
-        set1.highLightColor = Color.rgb(244, 117, 117)
-
-        // create a data object with the data sets
-        val data = BarData(set1)
-        data.setValueTextColor(Color.WHITE)
-        data.setValueTextSize(9f)
-
-        // set data
-        return data
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         // init activity
         super.onCreate(savedInstanceState)
@@ -100,11 +59,6 @@ class ActivityMain : AppCompatActivity() {
         // recycle view
         ecgCharts = binding.recycleChartList
         val adapter = AdapterChartList()
-        adapter.charts.add(4.3F)
-        adapter.charts.add(3.3F)
-        adapter.charts.add(4.3F)
-        adapter.charts.add(3.3F)
-
         ecgCharts.adapter = adapter
         ecgCharts.layoutManager = LinearLayoutManager(this)
     }
@@ -125,7 +79,7 @@ class ActivityMain : AppCompatActivity() {
         when (requestCode) {
             multiplePermissions -> {
                 if (grantResults.isEmpty()) {
-                    Timber.w("Not granted access")
+                    Timber.e("Not granted access")
                     return
                 }
                 grantResults.forEachIndexed { index, it ->
