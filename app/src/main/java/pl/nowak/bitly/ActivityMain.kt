@@ -29,6 +29,14 @@ class ActivityMain : AppCompatActivity() {
 
     // service
     private val multiplePermissions: Int = 100
+    private var permissionList = arrayOf(
+        Manifest.permission.BLUETOOTH_ADMIN,
+        Manifest.permission.ACCESS_FINE_LOCATION,
+        Manifest.permission.BLUETOOTH_ADVERTISE,
+        Manifest.permission.ACCESS_COARSE_LOCATION,
+        Manifest.permission.BLUETOOTH_SCAN,
+        Manifest.permission.BLUETOOTH_CONNECT
+    )
     private lateinit var mBluetoothLeService: BluetoothLeService
 
     // Code to manage Service lifecycle.
@@ -49,9 +57,6 @@ class ActivityMain : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
-        checkBlePermission()
-        setContentView(R.layout.activity_main)
 
         // init status text
         textStatus = binding.textConnectionStatus
@@ -90,6 +95,12 @@ class ActivityMain : AppCompatActivity() {
                         ) == PackageManager.PERMISSION_GRANTED
                     ) {
                         Timber.i("${permissions[index]} Granted access")
+                    } else {
+                        Toast.makeText(
+                            applicationContext,
+                            "Please grant us ${permissions[index]}",
+                            Toast.LENGTH_SHORT
+                        )
                     }
                 }
                 return
@@ -99,61 +110,27 @@ class ActivityMain : AppCompatActivity() {
 
     // function to check permissions
     private fun checkBlePermission() {
+
         val permRequest = {
             Timber.d("Requesting permissions for app BLE connect, scan, location, admin")
-            requestPermissions(
-                arrayOf(
-                    Manifest.permission.BLUETOOTH_ADMIN,
-                    Manifest.permission.ACCESS_FINE_LOCATION,
-                    Manifest.permission.BLUETOOTH_ADVERTISE,
-                    Manifest.permission.ACCESS_COARSE_LOCATION,
-                    Manifest.permission.BLUETOOTH_SCAN,
-                    Manifest.permission.BLUETOOTH_CONNECT
-                ), multiplePermissions
-            )
+            requestPermissions(permissionList, multiplePermissions)
         }
 
-        if ((ContextCompat.checkSelfPermission(
-                this@ActivityMain,
-                Manifest.permission.BLUETOOTH_ADMIN
-            ) +
-                    ContextCompat.checkSelfPermission(
-                        this@ActivityMain,
-                        Manifest.permission.BLUETOOTH_CONNECT
-                    ) +
-                    ContextCompat.checkSelfPermission(
-                        this@ActivityMain,
-                        Manifest.permission.BLUETOOTH_ADVERTISE
-                    ) +
-                    ContextCompat.checkSelfPermission(
-                        this@ActivityMain,
-                        Manifest.permission.ACCESS_FINE_LOCATION
-                    ) +
-                    ContextCompat.checkSelfPermission(
-                        this@ActivityMain,
-                        Manifest.permission.ACCESS_COARSE_LOCATION
-                    ))
-            != PackageManager.PERMISSION_GRANTED
-        ) {
-
-            if (ActivityCompat.shouldShowRequestPermissionRationale(
+        permissionList.forEachIndexed { _, item: String ->
+            if (ContextCompat.checkSelfPermission(
                     this@ActivityMain,
-                    Manifest.permission.BLUETOOTH_ADMIN
-                ) ||
-                ActivityCompat.shouldShowRequestPermissionRationale(
-                    this@ActivityMain,
-                    Manifest.permission.BLUETOOTH_CONNECT
-                ) ||
-                ActivityCompat.shouldShowRequestPermissionRationale(
-                    this@ActivityMain,
-                    Manifest.permission.BLUETOOTH_ADVERTISE
-                ) ||
-                ActivityCompat.shouldShowRequestPermissionRationale(
-                    this@ActivityMain,
-                    Manifest.permission.ACCESS_FINE_LOCATION
-                )
+                    item
+                ) != PackageManager.PERMISSION_GRANTED
             ) {
-                permRequest()
+                if (ActivityCompat.shouldShowRequestPermissionRationale(this@ActivityMain, item)) {
+                    Toast.makeText(
+                        applicationContext,
+                        "Please allow for this permission ${item}",
+                        Toast.LENGTH_SHORT
+                    )
+                } else {
+                    permRequest()
+                }
             }
         }
     }
