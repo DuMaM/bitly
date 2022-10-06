@@ -148,6 +148,8 @@ class BluetoothLeService : Service() {
             Timber.i("Name not changed")
         }
 
+        // nonblocking
+        // status via callback
         mBluetoothAdvertiser.startAdvertising(
             mBluetoothAdvParameters,
             mBleData,

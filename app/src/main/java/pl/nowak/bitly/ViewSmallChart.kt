@@ -13,12 +13,14 @@ import com.github.mikephil.charting.data.LineDataSet
 import java.util.*
 
 
-class SmallChart : LineChart {
+class ViewSmallChart : LineChart {
     constructor(ctx: Context) : super(ctx)
     constructor(ctx: Context, attrs: AttributeSet) : super(ctx, attrs)
     constructor(ctx: Context, attrs: AttributeSet, defStyle: Int) : super(ctx, attrs, defStyle)
 
     private var numberOfData: Int = 0
+    val holoBlue = Color.rgb(51, 181, 229)
+    val holeDarkBlue = Color.rgb(103, 134, 147)
 
     fun moveVisibleWindow(min: Float, max: Float) {
         val x: XAxis = xAxis
@@ -64,11 +66,7 @@ class SmallChart : LineChart {
         mTimer.cancel()
     }
 
-    fun default() {
-        val vl = LineDataSet(ArrayList(), "Data")
-        val holoBlue = Color.rgb(51, 181, 229)
-        val holeDarkBlue = Color.rgb(103, 134, 147)
-
+    fun defaultDataSettings(vl: LineDataSet): LineDataSet {
         // draw only space without line and dots
         vl.setDrawFilled(true)
         vl.setDrawValues(false)
@@ -79,6 +77,11 @@ class SmallChart : LineChart {
         vl.fillColor = holoBlue
         vl.fillAlpha = holoBlue
         vl.color = holoBlue
+        return vl
+    }
+
+    fun default() {
+        val vl = defaultDataSettings(LineDataSet(ArrayList(), "Data"))
         data = LineData(vl)
 
         // incognito mode in Y axis
