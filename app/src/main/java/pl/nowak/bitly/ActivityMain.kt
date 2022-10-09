@@ -50,9 +50,7 @@ class ActivityMain : AppCompatActivity() {
     private val mServiceConnection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(componentName: ComponentName, service: IBinder) {
             mBluetoothLeService = (service as BluetoothLeService.LocalBinder).service
-            if (!mBluetoothLeService.initialize(viewModel::updateConnectionStatus)) {
-                Timber.e("Unable to initialize Bluetooth")
-            }
+            mBluetoothLeService.initialize(viewModel::updateConnectionStatus)
         }
 
         override fun onServiceDisconnected(componentName: ComponentName) {
@@ -63,7 +61,7 @@ class ActivityMain : AppCompatActivity() {
         Timber.i("Init main activity")
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
-        binding.act = this                      // init varialble in data block from activity_main.xml
+        binding.act = this                      // init variable in data block from activity_main.xml
         binding.mainViewModel = viewModel       // same as in previous line
         binding.lifecycleOwner = this           // allow data to update actions
         setContentView(binding.root)            // show this main activity

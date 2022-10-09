@@ -105,21 +105,19 @@ class BluetoothLeService : Service() {
      *
      * @return Return true if the initialization is successful.
      */
-    fun initialize(connectionChangeCallback: KFunction1<String, Unit>): Boolean {
+    fun initialize(connectionChangeCallback: KFunction1<String, Unit>) {
         onConnectionStatusChange = connectionChangeCallback
         mBluetoothDevices.clear()
         if (!isEnabled()) {
             enableBle()
         }
-
-        return true
     }
 
     private fun isEnabled(): Boolean {
-        if (!mBluetoothAdapter.isEnabled) {
-            Timber.i("Bluetooth is not enabled")
+        if (mBluetoothAdapter.isEnabled) {
+            Timber.i("Bluetooth is enabled")
         } else {
-            Timber.i("Bluetooth is working")
+            Timber.i("Bluetooth is not enabled")
         }
         return mBluetoothAdapter.isEnabled
     }

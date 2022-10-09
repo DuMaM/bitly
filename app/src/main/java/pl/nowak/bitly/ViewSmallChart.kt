@@ -26,7 +26,7 @@ class ViewSmallChart : LineChart {
     // when no data is not sent
     private val mTimer: Timer = Timer()
 
-    fun moveVisibleWindow(min: Float, max: Float) {
+    private fun moveVisibleWindow(min: Float, max: Float) {
         val x: XAxis = xAxis
         if (min > 0) {
             x.axisMinimum = min

@@ -9,7 +9,7 @@ class ViewModelMain : ViewModel() {
 
     var chartsDataList: MutableLiveData<List<EcgChartData>>
 
-    private val _testStatus = MutableLiveData<String>("DISCONNECTED")
+    private val _testStatus = MutableLiveData("DISCONNECTED")
     val testStatus: LiveData<String>
         get() = _testStatus
 

@@ -4,5 +4,4 @@
     <dimen name="wall_spacing">24dp</dimen>
     <dimen name="stats_font_size">12sp</dimen>
     <dimen name="stats_height">80dp</dimen>
-    <dimen name="fab_margin">16dp</dimen>
 </resources>
