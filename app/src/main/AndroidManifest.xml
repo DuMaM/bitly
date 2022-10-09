@@ -36,7 +36,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Bitly">
         <activity
-            android:name=".ActivityStats"
+            android:name=".StatsActivity"
             android:exported="false">
             <meta-data
                 android:name="android.app.lib_name"
