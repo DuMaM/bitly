@@ -20,7 +20,7 @@ import pl.nowak.bitly.databinding.ActivityMainBinding
 import timber.log.Timber
 
 
-class ActivityMain : AppCompatActivity() {
+class MainActivity : AppCompatActivity() {
     // view
     private lateinit var binding: ActivityMainBinding
 
@@ -61,7 +61,7 @@ class ActivityMain : AppCompatActivity() {
         Timber.i("Init main activity")
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
-        binding.act = this                      // init variable in data block from activity_main.xml
+        binding.mainActivity = this             // init variable in data block from activity_main.xml
         binding.mainViewModel = viewModel       // same as in previous line
         binding.lifecycleOwner = this           // allow data to update actions
         setContentView(binding.root)            // show this main activity
@@ -105,7 +105,7 @@ class ActivityMain : AppCompatActivity() {
 
             grantResults.forEachIndexed { index, it ->
                 if (it == PackageManager.PERMISSION_GRANTED &&
-                    ContextCompat.checkSelfPermission(this@ActivityMain, permissions[index]) == PackageManager.PERMISSION_GRANTED
+                    ContextCompat.checkSelfPermission(this@MainActivity, permissions[index]) == PackageManager.PERMISSION_GRANTED
                 ) {
                     Timber.i("${permissions[index]} Granted access")
                 } else {
@@ -128,8 +128,8 @@ class ActivityMain : AppCompatActivity() {
         }
 
         permissionList.forEachIndexed { _, item: String ->
-            if (ContextCompat.checkSelfPermission(this@ActivityMain, item) != PackageManager.PERMISSION_GRANTED) {
-                if (ActivityCompat.shouldShowRequestPermissionRationale(this@ActivityMain, item)) {
+            if (ContextCompat.checkSelfPermission(this@MainActivity, item) != PackageManager.PERMISSION_GRANTED) {
+                if (ActivityCompat.shouldShowRequestPermissionRationale(this@MainActivity, item)) {
                     Toast.makeText(applicationContext, "Please allow for this permission $item", Toast.LENGTH_SHORT).show()
                 } else {
                     permRequest()

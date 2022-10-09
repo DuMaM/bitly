@@ -3,18 +3,18 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
 
-    tools:context=".ActivityMain">
+    tools:context=".MainActivity">
 
 
     <data>
 
-        <import type="pl.nowak.bitly.ActivityMain" />
+        <import type="pl.nowak.bitly.MainActivity" />
 
         <import type="pl.nowak.bitly.ViewModelMain" />
 
         <variable
-            name="act"
-            type="pl.nowak.bitly.ActivityMain" />
+            name="mainActivity"
+            type="pl.nowak.bitly.MainActivity" />
 
         <variable
             name="mainViewModel"
@@ -33,7 +33,7 @@
             android:layout_marginStart="@dimen/wall_spacing"
             android:layout_marginTop="@dimen/wall_spacing"
             android:layout_marginEnd="8dp"
-            android:onClick="@{()-> act.advertise()}"
+            android:onClick="@{()-> mainActivity.advertise()}"
             android:text="@string/btnScanView"
             app:layout_constraintEnd_toStartOf="@+id/btDropView"
             app:layout_constraintStart_toStartOf="parent"
@@ -45,7 +45,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/wall_spacing"
             android:layout_marginEnd="@dimen/wall_spacing"
-            android:onClick="@{() -> act.disconnect()}"
+            android:onClick="@{() -> mainActivity.disconnect()}"
             android:text="@string/btnDropView"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@+id/btAdvView"
