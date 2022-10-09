@@ -94,11 +94,7 @@ class ActivityMain : AppCompatActivity() {
         bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE)
     }
 
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<String>,
-        grantResults: IntArray
-    ) {
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
 
         val checkGranted = checkGranted@{
@@ -109,18 +105,11 @@ class ActivityMain : AppCompatActivity() {
 
             grantResults.forEachIndexed { index, it ->
                 if (it == PackageManager.PERMISSION_GRANTED &&
-                    ContextCompat.checkSelfPermission(
-                        this@ActivityMain,
-                        permissions[index]
-                    ) == PackageManager.PERMISSION_GRANTED
+                    ContextCompat.checkSelfPermission(this@ActivityMain, permissions[index]) == PackageManager.PERMISSION_GRANTED
                 ) {
                     Timber.i("${permissions[index]} Granted access")
                 } else {
-                    Toast.makeText(
-                        applicationContext,
-                        "Please grant us ${permissions[index]}",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    Toast.makeText(applicationContext, "Please grant us ${permissions[index]}", Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -139,17 +128,9 @@ class ActivityMain : AppCompatActivity() {
         }
 
         permissionList.forEachIndexed { _, item: String ->
-            if (ContextCompat.checkSelfPermission(
-                    this@ActivityMain,
-                    item
-                ) != PackageManager.PERMISSION_GRANTED
-            ) {
+            if (ContextCompat.checkSelfPermission(this@ActivityMain, item) != PackageManager.PERMISSION_GRANTED) {
                 if (ActivityCompat.shouldShowRequestPermissionRationale(this@ActivityMain, item)) {
-                    Toast.makeText(
-                        applicationContext,
-                        "Please allow for this permission $item",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    Toast.makeText(applicationContext, "Please allow for this permission $item", Toast.LENGTH_SHORT).show()
                 } else {
                     permRequest()
                 }
