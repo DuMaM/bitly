@@ -93,7 +93,7 @@ class EcgChartDiffCallback : DiffUtil.ItemCallback<EcgChartData>() {
             val lastIndex = item.entryCount - 1
             item.getEntryForIndex(lastIndex).x
         } else {
-            -1.0f
+            Float.NaN
         }
     }
 
