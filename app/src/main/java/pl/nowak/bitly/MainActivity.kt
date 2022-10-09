@@ -144,11 +144,13 @@ class MainActivity : AppCompatActivity() {
 
     @RequiresPermission(allOf = ["android.permission.BLUETOOTH_CONNECT", "android.permission.BLUETOOTH_ADVERTISE"])
     fun advertise() {
+        // TODO: Move to viewModel
         mBluetoothLeService.startAdv()
     }
 
     @RequiresPermission(allOf = ["android.permission.BLUETOOTH_CONNECT", "android.permission.BLUETOOTH_ADVERTISE"])
     fun disconnect() {
+        // TODO: Move to viewModel
         mBluetoothLeService.disconnectFromDevices()
     }
 }
