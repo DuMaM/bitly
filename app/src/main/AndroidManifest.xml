@@ -28,7 +28,7 @@
         android:required="true" />
 
     <application
-        android:name=".ApplicationBitly"
+        android:name=".BitlyApplication"
         android:fullBackupOnly="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -36,14 +36,14 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Bitly">
         <activity
-            android:name=".ActivityStats"
+            android:name=".StatsActivity"
             android:exported="false">
             <meta-data
                 android:name="android.app.lib_name"
                 android:value="" />
         </activity>
         <activity
-            android:name=".ActivityMain"
+            android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

@@ -1,24 +1,14 @@
 package pl.nowak.bitly
 
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import timber.log.Timber
 
-class ViewModelMain : ViewModel() {
-
+class EcgChartViewModel : ViewModel() {
     var chartsDataList: MutableLiveData<List<EcgChartData>>
 
-    private val _testStatus = MutableLiveData("DISCONNECTED")
-    val testStatus: LiveData<String>
-        get() = _testStatus
-
-    fun updateConnectionStatus(text: String) {
-        _testStatus.value = text.uppercase()
-    }
-
     init {
-        Timber.i("Main App View Model created")
+        Timber.i("Charts Data View Model created")
 
         // remove error
         // Utils NOT INITIALIZED. You need to call Utils.init(...) at least once before calling Utils.convertDpToPixel(...). Otherwise conversion does not take place.
@@ -42,6 +32,7 @@ class ViewModelMain : ViewModel() {
 
     override fun onCleared() {
         super.onCleared()
-        Timber.i("Main App View Model destroyed")
+        Timber.i("Charts data Model destroyed")
     }
 }
+

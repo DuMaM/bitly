@@ -4,7 +4,7 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import pl.nowak.bitly.databinding.ActivityStatsBinding
 
-class ActivityStats : AppCompatActivity() {
+class StatsActivity : AppCompatActivity() {
 
     // view
     private lateinit var binding: ActivityStatsBinding
