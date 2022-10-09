@@ -27,8 +27,12 @@ class MainActivity : AppCompatActivity() {
     // viewModels
     private val viewModel: MainViewModel by lazy {
         Timber.i("Create viewModel for main activity")
-        // val viewModel = ViewModelProvider(this, ViewModelMainFactory)[MainViewModel::class.java]     // With ViewModelFactory fill this later on
-        ViewModelProvider(this)[MainViewModel::class.java]                            //Without ViewModelFactory
+        ViewModelProvider(this)[MainViewModel::class.java]
+    }
+
+    private val viewModelCharts: EcgChartViewModel by lazy {
+        Timber.i("Create EcgChartViewModel for main activity")
+        ViewModelProvider(this)[EcgChartViewModel::class.java]
     }
 
     // ecg recycle view
@@ -79,7 +83,7 @@ class MainActivity : AppCompatActivity() {
         ecgChartsView = binding.recycleChartList
         ecgChartsView.adapter = adapter
         ecgChartsView.layoutManager = LinearLayoutManager(this)
-        viewModel.chartsDataList.observe(this) {
+        viewModelCharts.chartsDataList.observe(this) {
             it?.let {
                 adapter.submitList(it)
             }
