@@ -2,7 +2,6 @@ package pl.nowak.bitly
 
 import android.graphics.Color
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
@@ -11,6 +10,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.github.mikephil.charting.components.YAxis
 import com.github.mikephil.charting.data.*
 import com.github.mikephil.charting.utils.ColorTemplate
+import pl.nowak.bitly.databinding.EcgChartItemBinding
 import java.util.concurrent.TimeUnit
 import kotlin.random.Random
 
@@ -26,12 +26,9 @@ class AdapterChartList :
         return ViewHolderSmallChart.from(parent)
     }
 
-    class ViewHolderSmallChart private constructor(itemView: View) :
-        RecyclerView.ViewHolder(itemView) {
-        private val ecgLabel: TextView = itemView.findViewById(R.id.ecgLineLabel) as TextView
-        private val ecgChart: ViewSmallChart =
-            itemView.findViewById(R.id.ecgChart) as ViewSmallChart
-
+    class ViewHolderSmallChart private constructor(private val binding: EcgChartItemBinding) : RecyclerView.ViewHolder(binding.root) {
+        private val ecgLabel: TextView = binding.ecgLineLabel
+        private val ecgChart: ViewSmallChart = binding.ecgChart
 
         fun bind(item: EcgChartData) {
             if (item.chart.entryCount == 0) {
@@ -79,8 +76,8 @@ class AdapterChartList :
         companion object {
             fun from(parent: ViewGroup): ViewHolderSmallChart {
                 val layoutInflater = LayoutInflater.from(parent.context)
-                val view = layoutInflater.inflate(R.layout.ecg_chart_item, parent, false)
-                return ViewHolderSmallChart(view)
+                val binding = EcgChartItemBinding.inflate(layoutInflater, parent, false)
+                return ViewHolderSmallChart(binding)
             }
         }
     }
