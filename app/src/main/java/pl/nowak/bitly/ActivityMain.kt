@@ -13,8 +13,11 @@ import androidx.annotation.RequiresPermission
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.github.mikephil.charting.utils.Utils
 import pl.nowak.bitly.databinding.ActivityMainBinding
 import timber.log.Timber
 
@@ -25,7 +28,8 @@ class ActivityMain : AppCompatActivity() {
     private lateinit var textStatus: TextView
 
     // ecg recycle view
-    private lateinit var ecgCharts: RecyclerView
+    private lateinit var ecgChartsView: RecyclerView
+    private lateinit var chartsDataList: MutableLiveData<List<EcgChartData>>
 
     // service
     private val multiplePermissions: Int = 100
@@ -56,16 +60,45 @@ class ActivityMain : AppCompatActivity() {
         // init activity
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
+        // allow data to update actions
+        binding.lifecycleOwner = this
+        // show this main activity
         setContentView(binding.root)
 
         // init status text
         textStatus = binding.textConnectionStatus
 
         // recycle view
-        ecgCharts = binding.recycleChartList
+
+        // remove error
+        // Utils NOT INITIALIZED. You need to call Utils.init(...) at least once before calling Utils.convertDpToPixel(...). Otherwise conversion does not take place.
+        Utils.init(this)
+        chartsDataList = MutableLiveData(
+            listOf(
+                EcgChartData("Lead V1", 1),
+                EcgChartData("Lead V2", 2),
+                EcgChartData("Lead V3", 3),
+                EcgChartData("Lead V4", 4),
+                EcgChartData("Lead V5", 5),
+                EcgChartData("Lead V6", 6),
+                EcgChartData("Lead I", 7),
+                EcgChartData("Lead II", 8),
+                EcgChartData("Lead III", 9),
+                EcgChartData("Lead aVR", 10),
+                EcgChartData("Lead aVL", 11),
+                EcgChartData("Lead aVF", 12)
+            )
+        )
+
+        ecgChartsView = binding.recycleChartList
         val adapter = AdapterChartList()
-        ecgCharts.adapter = adapter
-        ecgCharts.layoutManager = LinearLayoutManager(this)
+        ecgChartsView.adapter = adapter
+        ecgChartsView.layoutManager = LinearLayoutManager(this)
+        chartsDataList.observe(this) {
+            it?.let {
+                adapter.submitList(it)
+            }
+        }
     }
 
     override fun onResume() {
@@ -129,7 +162,7 @@ class ActivityMain : AppCompatActivity() {
                 if (ActivityCompat.shouldShowRequestPermissionRationale(this@ActivityMain, item)) {
                     Toast.makeText(
                         applicationContext,
-                        "Please allow for this permission ${item}",
+                        "Please allow for this permission $item",
                         Toast.LENGTH_SHORT
                     ).show()
                 } else {

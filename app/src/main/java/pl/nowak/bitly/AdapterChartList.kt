@@ -5,43 +5,20 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.github.mikephil.charting.components.YAxis
-import com.github.mikephil.charting.data.BarData
-import com.github.mikephil.charting.data.BarDataSet
-import com.github.mikephil.charting.data.BarEntry
-import com.github.mikephil.charting.data.LineDataSet
+import com.github.mikephil.charting.data.*
 import com.github.mikephil.charting.utils.ColorTemplate
 import java.util.concurrent.TimeUnit
 import kotlin.random.Random
 
-class AdapterChartList : RecyclerView.Adapter<AdapterChartList.ViewHolderSmallChart>() {
-
-    class EcgChartView(_label: String) {
-        var chart: LineDataSet = LineDataSet(ArrayList(), "Data")
-        var pos: Int = -1
-        val label = _label
-    }
-
-    val charts = listOf<EcgChartView>(
-        EcgChartView("Lead V1"),
-        EcgChartView("Lead V2"),
-        EcgChartView("Lead V3"),
-        EcgChartView("Lead V4"),
-        EcgChartView("Lead V5"),
-        EcgChartView("Lead V6"),
-        EcgChartView("Lead I"),
-        EcgChartView("Lead II"),
-        EcgChartView("Lead III"),
-        EcgChartView("Lead aVR"),
-        EcgChartView("Lead aVL"),
-        EcgChartView("Lead aVF")
-    )
-
-    override fun getItemCount() = charts.size
+class AdapterChartList :
+    ListAdapter<EcgChartData, AdapterChartList.ViewHolderSmallChart>(EcgChartDiffCallback()) {
 
     override fun onBindViewHolder(holder: ViewHolderSmallChart, position: Int) {
-        val item = charts[position]
+        val item = getItem(position)
         holder.bind(item)
     }
 
@@ -51,15 +28,19 @@ class AdapterChartList : RecyclerView.Adapter<AdapterChartList.ViewHolderSmallCh
 
     class ViewHolderSmallChart private constructor(itemView: View) :
         RecyclerView.ViewHolder(itemView) {
-        val ecgLabel: TextView = itemView.findViewById(R.id.ecgLineLabel)
-        val ecgChart: ViewSmallChart = itemView.findViewById(R.id.ecgChart)
+        private val ecgLabel: TextView = itemView.findViewById(R.id.ecgLineLabel) as TextView
+        private val ecgChart: ViewSmallChart =
+            itemView.findViewById(R.id.ecgChart) as ViewSmallChart
 
-        init {
-            ecgChart.default()
-        }
 
-        fun bind(item: EcgChartView) {
+        fun bind(item: EcgChartData) {
+            if (item.chart.entryCount == 0) {
+                item.chart = ecgChart.defaultDataSettings(item.chart)
+                ecgChart.defaultAxisSettings()
+            }
+
             ecgLabel.text = item.label
+            ecgChart.data = LineData(item.chart)
         }
 
         private fun setData(count: Int, range: Double): BarData {
@@ -94,7 +75,7 @@ class AdapterChartList : RecyclerView.Adapter<AdapterChartList.ViewHolderSmallCh
             // set data
             return data
         }
-        
+
         companion object {
             fun from(parent: ViewGroup): ViewHolderSmallChart {
                 val layoutInflater = LayoutInflater.from(parent.context)
@@ -102,5 +83,38 @@ class AdapterChartList : RecyclerView.Adapter<AdapterChartList.ViewHolderSmallCh
                 return ViewHolderSmallChart(view)
             }
         }
+    }
+}
+
+class EcgChartDiffCallback : DiffUtil.ItemCallback<EcgChartData>() {
+
+    private fun getLastTimestamp(item: LineDataSet): Float {
+        return if (item.entryCount > 0) {
+            val lastIndex = item.entryCount - 1
+            item.getEntryForIndex(lastIndex).x
+        } else {
+            -1.0f
+        }
+    }
+
+    override fun areItemsTheSame(oldItem: EcgChartData, newItem: EcgChartData): Boolean {
+        return oldItem.id == newItem.id
+    }
+
+    override fun areContentsTheSame(oldItem: EcgChartData, newItem: EcgChartData): Boolean {
+        val oldChart = oldItem.chart
+        val newChart = newItem.chart
+
+        // init situation where there is not full window set
+        if (oldChart.entryCount < newChart.entryCount) {
+            return true
+        }
+
+        // full window is set
+        if (oldChart.entryCount > 0 && newChart.entryCount > 0) {
+            return getLastTimestamp(oldChart) != getLastTimestamp(newChart)
+        }
+
+        return false
     }
 }

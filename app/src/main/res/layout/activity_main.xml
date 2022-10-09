@@ -63,12 +63,14 @@
             android:id="@+id/recycleChartList"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_marginStart="@dimen/wall_spacing"
             android:layout_marginTop="@dimen/wall_spacing"
-            android:layout_marginEnd="@dimen/wall_spacing"
             android:layout_marginBottom="@dimen/wall_spacing"
+            android:scrollbars="vertical"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/textConnectionStatus" />
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/textConnectionStatus"
+            tools:listitem="@layout/ecg_chart_item" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

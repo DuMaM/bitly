@@ -19,8 +19,12 @@ class ViewSmallChart : LineChart {
     constructor(ctx: Context, attrs: AttributeSet, defStyle: Int) : super(ctx, attrs, defStyle)
 
     private var numberOfData: Int = 0
-    val holoBlue = Color.rgb(51, 181, 229)
-    val holeDarkBlue = Color.rgb(103, 134, 147)
+    private val holoBlue = Color.rgb(51, 181, 229)
+    private val holeDarkBlue = Color.rgb(103, 134, 147)
+
+    // used for drawing the line chart
+    // when no data is not sent
+    private val mTimer: Timer = Timer()
 
     fun moveVisibleWindow(min: Float, max: Float) {
         val x: XAxis = xAxis
@@ -43,10 +47,6 @@ class ViewSmallChart : LineChart {
             invalidate()
         }
     }
-
-    // used for drawing the line chart
-    // when no data is not sent
-    private val mTimer: Timer = Timer()
 
     private fun startTimer() {
         mTimer.schedule(object : TimerTask() {
@@ -80,16 +80,12 @@ class ViewSmallChart : LineChart {
         return vl
     }
 
-    fun default() {
-        val vl = defaultDataSettings(LineDataSet(ArrayList(), "Data"))
-        data = LineData(vl)
-
+    fun defaultAxisSettings() {
         // incognito mode in Y axis
         axisRight.setDrawGridLines(true)
         axisRight.setDrawLabels(false)
         axisRight.isEnabled = false
 
-        axisLeft.setDrawGridLines(true)
         // labels settings
         axisLeft.setDrawLabels(false)
         axisLeft.setPosition(YAxis.YAxisLabelPosition.OUTSIDE_CHART)
@@ -125,7 +121,13 @@ class ViewSmallChart : LineChart {
         setPinchZoom(false)
 
         animateX(1800, Easing.EaseInExpo)
+    }
 
+    fun default() {
+        val vl = defaultDataSettings(LineDataSet(ArrayList(), "Data"))
+        data = LineData(vl)
+
+        defaultAxisSettings()
         // fill with empty data
         startTimer()
     }
