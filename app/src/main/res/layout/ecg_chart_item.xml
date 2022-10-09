@@ -6,7 +6,7 @@
     <data>
 
         <variable
-            name="ecgChart"
+            name="ecgItem"
             type="pl.nowak.bitly.EcgChartData" />
     </data>
 
