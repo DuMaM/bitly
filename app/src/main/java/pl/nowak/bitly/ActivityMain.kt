@@ -12,8 +12,7 @@ import androidx.annotation.RequiresPermission
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.github.mikephil.charting.utils.Utils
@@ -24,13 +23,16 @@ import timber.log.Timber
 class ActivityMain : AppCompatActivity() {
     // view
     private lateinit var binding: ActivityMainBinding
-    private val _testStatus = MutableLiveData<String>("Disconnected")
-    val testStatus: LiveData<String>
-        get() = _testStatus
+
+    // viewModels
+    private val viewModel: ViewModelMain by lazy {
+        Timber.i("Create viewModel for main activity")
+        // val viewModel = ViewModelProvider(this, ViewModelMainFactory)[ViewModelMain::class.java]     // With ViewModelFactory fill this later on
+        ViewModelProvider(this)[ViewModelMain::class.java]                            //Without ViewModelFactory
+    }
 
     // ecg recycle view
     private lateinit var ecgChartsView: RecyclerView
-    private lateinit var chartsDataList: MutableLiveData<List<EcgChartData>>
 
     // service
     private val multiplePermissions: Int = 100
@@ -48,7 +50,7 @@ class ActivityMain : AppCompatActivity() {
     private val mServiceConnection: ServiceConnection = object : ServiceConnection {
         override fun onServiceConnected(componentName: ComponentName, service: IBinder) {
             mBluetoothLeService = (service as BluetoothLeService.LocalBinder).service
-            if (!mBluetoothLeService.initialize(this@ActivityMain::updateConnectionStatus)) {
+            if (!mBluetoothLeService.initialize(viewModel::updateConnectionStatus)) {
                 Timber.e("Unable to initialize Bluetooth")
             }
         }
@@ -58,41 +60,28 @@ class ActivityMain : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // init activity
+        Timber.i("Init main activity")
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
-        // allow data to update actions
-        binding.lifecycleOwner = this
-        // show this main activity
-        setContentView(binding.root)
+        binding.act = this                      // init varialble in data block from activity_main.xml
+        binding.mainViewModel = viewModel       // same as in previous line
+        binding.lifecycleOwner = this           // allow data to update actions
+        setContentView(binding.root)            // show this main activity
 
-        // recycle view
-
-        // remove error
-        // Utils NOT INITIALIZED. You need to call Utils.init(...) at least once before calling Utils.convertDpToPixel(...). Otherwise conversion does not take place.
+        Timber.i("Prepare recycle view components")
+        /**
+         * This line is important one, and removes bellow error
+         * `Utils NOT INITIALIZED. You need to call Utils.init(...)
+         * at least once before calling Utils.convertDpToPixel(...).
+         * Otherwise conversion does not take place.
+         */
         Utils.init(this)
-        chartsDataList = MutableLiveData(
-            listOf(
-                EcgChartData("Lead V1", 1),
-                EcgChartData("Lead V2", 2),
-                EcgChartData("Lead V3", 3),
-                EcgChartData("Lead V4", 4),
-                EcgChartData("Lead V5", 5),
-                EcgChartData("Lead V6", 6),
-                EcgChartData("Lead I", 7),
-                EcgChartData("Lead II", 8),
-                EcgChartData("Lead III", 9),
-                EcgChartData("Lead aVR", 10),
-                EcgChartData("Lead aVL", 11),
-                EcgChartData("Lead aVF", 12)
-            )
-        )
 
-        ecgChartsView = binding.recycleChartList
         val adapter = AdapterChartList()
+        ecgChartsView = binding.recycleChartList
         ecgChartsView.adapter = adapter
         ecgChartsView.layoutManager = LinearLayoutManager(this)
-        chartsDataList.observe(this) {
+        viewModel.chartsDataList.observe(this) {
             it?.let {
                 adapter.submitList(it)
             }
@@ -168,10 +157,6 @@ class ActivityMain : AppCompatActivity() {
                 }
             }
         }
-    }
-
-    fun updateConnectionStatus(text: String) {
-        _testStatus.value = text.uppercase()
     }
 
     @RequiresPermission(allOf = ["android.permission.BLUETOOTH_CONNECT", "android.permission.BLUETOOTH_ADVERTISE"])

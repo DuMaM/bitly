@@ -10,9 +10,16 @@
 
         <import type="pl.nowak.bitly.ActivityMain" />
 
+        <import type="pl.nowak.bitly.ViewModelMain" />
+
         <variable
             name="act"
             type="pl.nowak.bitly.ActivityMain" />
+
+        <variable
+            name="mainViewModel"
+            type="pl.nowak.bitly.ViewModelMain" />
+
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -53,7 +60,7 @@
             android:layout_marginEnd="@dimen/wall_spacing"
             android:gravity="center_horizontal|center_vertical"
             android:singleLine="true"
-            android:text="@{act.testStatus}"
+            android:text="@{mainViewModel.testStatus}"
             android:textAlignment="center"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
