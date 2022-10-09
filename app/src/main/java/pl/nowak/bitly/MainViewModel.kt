@@ -5,7 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import timber.log.Timber
 
-class ViewModelMain : ViewModel() {
+class MainViewModel : ViewModel() {
 
     var chartsDataList: MutableLiveData<List<EcgChartData>>
 

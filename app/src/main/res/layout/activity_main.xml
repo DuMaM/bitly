@@ -10,7 +10,7 @@
 
         <import type="pl.nowak.bitly.MainActivity" />
 
-        <import type="pl.nowak.bitly.ViewModelMain" />
+        <import type="pl.nowak.bitly.MainViewModel" />
 
         <variable
             name="mainActivity"
@@ -18,7 +18,7 @@
 
         <variable
             name="mainViewModel"
-            type="pl.nowak.bitly.ViewModelMain" />
+            type="pl.nowak.bitly.MainViewModel" />
 
     </data>
 

@@ -25,10 +25,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
 
     // viewModels
-    private val viewModel: ViewModelMain by lazy {
+    private val viewModel: MainViewModel by lazy {
         Timber.i("Create viewModel for main activity")
-        // val viewModel = ViewModelProvider(this, ViewModelMainFactory)[ViewModelMain::class.java]     // With ViewModelFactory fill this later on
-        ViewModelProvider(this)[ViewModelMain::class.java]                            //Without ViewModelFactory
+        // val viewModel = ViewModelProvider(this, ViewModelMainFactory)[MainViewModel::class.java]     // With ViewModelFactory fill this later on
+        ViewModelProvider(this)[MainViewModel::class.java]                            //Without ViewModelFactory
     }
 
     // ecg recycle view
