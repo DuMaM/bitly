@@ -7,7 +7,6 @@ import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.os.IBinder
-import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.RequiresPermission
 import androidx.appcompat.app.AppCompatActivity
@@ -25,7 +24,9 @@ import timber.log.Timber
 class ActivityMain : AppCompatActivity() {
     // view
     private lateinit var binding: ActivityMainBinding
-    private lateinit var textStatus: TextView
+    private val _testStatus = MutableLiveData<String>("Disconnected")
+    val testStatus: LiveData<String>
+        get() = _testStatus
 
     // ecg recycle view
     private lateinit var ecgChartsView: RecyclerView
@@ -35,9 +36,9 @@ class ActivityMain : AppCompatActivity() {
     private val multiplePermissions: Int = 100
     private var permissionList = arrayOf(
         Manifest.permission.BLUETOOTH_ADMIN,
-        Manifest.permission.ACCESS_FINE_LOCATION,
+        // Manifest.permission.ACCESS_FINE_LOCATION,
         Manifest.permission.BLUETOOTH_ADVERTISE,
-        Manifest.permission.ACCESS_COARSE_LOCATION,
+        // Manifest.permission.ACCESS_COARSE_LOCATION,
         Manifest.permission.BLUETOOTH_SCAN,
         Manifest.permission.BLUETOOTH_CONNECT
     )
@@ -64,9 +65,6 @@ class ActivityMain : AppCompatActivity() {
         binding.lifecycleOwner = this
         // show this main activity
         setContentView(binding.root)
-
-        // init status text
-        textStatus = binding.textConnectionStatus
 
         // recycle view
 
@@ -173,9 +171,7 @@ class ActivityMain : AppCompatActivity() {
     }
 
     fun updateConnectionStatus(text: String) {
-        runOnUiThread {
-            textStatus.text = text.uppercase()
-        }
+        _testStatus.value = text.uppercase()
     }
 
     @RequiresPermission(allOf = ["android.permission.BLUETOOTH_CONNECT", "android.permission.BLUETOOTH_ADVERTISE"])
@@ -187,5 +183,4 @@ class ActivityMain : AppCompatActivity() {
     fun disconnect() {
         mBluetoothLeService.disconnectFromDevices()
     }
-
 }

@@ -53,11 +53,12 @@
             android:layout_marginEnd="@dimen/wall_spacing"
             android:gravity="center_horizontal|center_vertical"
             android:singleLine="true"
-            android:text="@string/textConnectionStatus"
+            android:text="@{act.testStatus}"
             android:textAlignment="center"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/btAdvView" />
+            app:layout_constraintTop_toBottomOf="@+id/btAdvView"
+            tools:text="@string/textConnectionStatus" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recycleChartList"
