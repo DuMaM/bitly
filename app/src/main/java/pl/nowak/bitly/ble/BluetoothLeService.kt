@@ -1,4 +1,4 @@
-package pl.nowak.bitly
+package pl.nowak.bitly.ble
 
 import android.Manifest.permission.BLUETOOTH_ADVERTISE
 import android.Manifest.permission.BLUETOOTH_CONNECT
@@ -9,6 +9,8 @@ import android.content.Context
 import android.content.Intent
 import android.os.*
 import androidx.annotation.RequiresPermission
+import pl.nowak.bitly.BleTestType
+import pl.nowak.bitly.Metrics
 import timber.log.Timber
 import java.util.*
 import kotlin.experimental.and

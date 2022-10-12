@@ -36,7 +36,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Bitly">
         <activity
-            android:name=".StatsActivity"
+            android:name=".stats.StatsActivity"
             android:exported="false">
             <meta-data
                 android:name="android.app.lib_name"
@@ -53,7 +53,7 @@
         </activity>
 
         <service
-            android:name=".BluetoothLeService"
+            android:name=".ble.BluetoothLeService"
             android:enabled="true" />
     </application>
 

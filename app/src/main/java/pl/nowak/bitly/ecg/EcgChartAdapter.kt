@@ -4,40 +4,38 @@ import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.TextView
-import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.github.mikephil.charting.components.YAxis
 import com.github.mikephil.charting.data.*
 import com.github.mikephil.charting.utils.ColorTemplate
 import pl.nowak.bitly.databinding.EcgChartItemBinding
+import pl.nowak.bitly.ecg.EcgChart
+import pl.nowak.bitly.ecg.EcgChartData
+import pl.nowak.bitly.ecg.EcgChartDiffCallback
 import java.util.concurrent.TimeUnit
 import kotlin.random.Random
 
-class AdapterChartList :
-    ListAdapter<EcgChartData, AdapterChartList.ViewHolderSmallChart>(EcgChartDiffCallback()) {
+class EcgChartListAdapter : ListAdapter<EcgChartData, EcgChartListAdapter.EcgChartViewHolder>(EcgChartDiffCallback()) {
 
-    override fun onBindViewHolder(holder: ViewHolderSmallChart, position: Int) {
+    override fun onBindViewHolder(holder: EcgChartViewHolder, position: Int) {
         val item = getItem(position)
         holder.bind(item)
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolderSmallChart {
-        return ViewHolderSmallChart.from(parent)
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): EcgChartViewHolder {
+        return EcgChartViewHolder.from(parent)
     }
 
-    class ViewHolderSmallChart private constructor(private val binding: EcgChartItemBinding) : RecyclerView.ViewHolder(binding.root) {
+    class EcgChartViewHolder private constructor(private val binding: EcgChartItemBinding) : RecyclerView.ViewHolder(binding.root) {
         private val ecgLabel: TextView = binding.ecgLineLabel
-        private val ecgChart: ViewSmallChart = binding.ecgChart
+        private val ecgChart: EcgChart = binding.ecgChart
 
         fun bind(item: EcgChartData) {
-            if (item.chart.entryCount == 0) {
-                item.chart = ecgChart.defaultDataSettings(item.chart)
-                ecgChart.defaultAxisSettings()
-            }
-
+            val lineSet = ecgChart.defaultDataSettings(LineDataSet(item.lineDataRestricted.toList(), item.label))
+            ecgChart.defaultAxisSettings()
             ecgLabel.text = item.label
-            ecgChart.data = LineData(item.chart)
+            ecgChart.data = LineData(lineSet)
         }
 
         private fun setData(count: Int, range: Double): BarData {
@@ -74,44 +72,11 @@ class AdapterChartList :
         }
 
         companion object {
-            fun from(parent: ViewGroup): ViewHolderSmallChart {
+            fun from(parent: ViewGroup): EcgChartViewHolder {
                 val layoutInflater = LayoutInflater.from(parent.context)
                 val binding = EcgChartItemBinding.inflate(layoutInflater, parent, false)
-                return ViewHolderSmallChart(binding)
+                return EcgChartViewHolder(binding)
             }
         }
-    }
-}
-
-class EcgChartDiffCallback : DiffUtil.ItemCallback<EcgChartData>() {
-
-    private fun getLastTimestamp(item: LineDataSet): Float {
-        return if (item.entryCount > 0) {
-            val lastIndex = item.entryCount - 1
-            item.getEntryForIndex(lastIndex).x
-        } else {
-            Float.NaN
-        }
-    }
-
-    override fun areItemsTheSame(oldItem: EcgChartData, newItem: EcgChartData): Boolean {
-        return oldItem.id == newItem.id
-    }
-
-    override fun areContentsTheSame(oldItem: EcgChartData, newItem: EcgChartData): Boolean {
-        val oldChart = oldItem.chart
-        val newChart = newItem.chart
-
-        // init situation where there is not full window set
-        if (oldChart.entryCount < newChart.entryCount) {
-            return true
-        }
-
-        // full window is set
-        if (oldChart.entryCount > 0 && newChart.entryCount > 0) {
-            return getLastTimestamp(oldChart) != getLastTimestamp(newChart)
-        }
-
-        return false
     }
 }

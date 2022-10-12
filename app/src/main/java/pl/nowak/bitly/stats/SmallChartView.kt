@@ -1,4 +1,4 @@
-package pl.nowak.bitly
+package pl.nowak.bitly.stats
 
 import android.content.Context
 import android.graphics.Color
@@ -13,7 +13,7 @@ import com.github.mikephil.charting.data.LineDataSet
 import java.util.*
 
 
-class ViewSmallChart : LineChart {
+class SmallChartView : LineChart {
     constructor(ctx: Context) : super(ctx)
     constructor(ctx: Context, attrs: AttributeSet) : super(ctx, attrs)
     constructor(ctx: Context, attrs: AttributeSet, defStyle: Int) : super(ctx, attrs, defStyle)

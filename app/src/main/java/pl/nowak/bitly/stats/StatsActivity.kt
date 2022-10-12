@@ -1,4 +1,4 @@
-package pl.nowak.bitly
+package pl.nowak.bitly.stats
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
@@ -10,9 +10,9 @@ class StatsActivity : AppCompatActivity() {
     private lateinit var binding: ActivityStatsBinding
 
     // view charts - small
-    private lateinit var mJitterView: ViewSmallChart
-    private lateinit var mPingView: ViewSmallChart
-    private lateinit var mTransferSpeed: ViewSmallChart
+    private lateinit var mJitterView: SmallChartView
+    private lateinit var mPingView: SmallChartView
+    private lateinit var mTransferSpeed: SmallChartView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // init activity

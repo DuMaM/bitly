@@ -16,7 +16,9 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.github.mikephil.charting.utils.Utils
+import pl.nowak.bitly.ble.BluetoothLeService
 import pl.nowak.bitly.databinding.ActivityMainBinding
+import pl.nowak.bitly.ecg.EcgChartViewModel
 import timber.log.Timber
 
 
@@ -79,7 +81,7 @@ class MainActivity : AppCompatActivity() {
          */
         Utils.init(this)
 
-        val adapter = AdapterChartList()
+        val adapter = EcgChartListAdapter()
         ecgChartsView = binding.recycleChartList
         ecgChartsView.adapter = adapter
         ecgChartsView.layoutManager = LinearLayoutManager(this)

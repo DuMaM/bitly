@@ -7,7 +7,7 @@
 
         <variable
             name="ecgItem"
-            type="pl.nowak.bitly.EcgChartData" />
+            type="pl.nowak.bitly.ecg.EcgChartData" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -26,7 +26,7 @@
             app:layout_constraintTop_toTopOf="parent"
             tools:text="Label" />
 
-        <pl.nowak.bitly.ViewSmallChart
+        <pl.nowak.bitly.ecg.EcgChart
             android:id="@+id/ecgChart"
             android:layout_width="0dp"
             android:layout_height="200dp"
