@@ -8,7 +8,7 @@ import pl.nowak.bitly.LeadName
 data class LeadEntry constructor(
     @PrimaryKey(autoGenerate = true)
     var id: Long = 0L,
-    val x: Float = -1.0f,
-    val y: Float = 0.0f,
-    val lead: LeadName = LeadName.LeadUnknown
+    var x: Float = -1.0f,
+    var y: Float = 0.0f,
+    var lead: Int = LeadName.LeadUnknown.ordinal
 )

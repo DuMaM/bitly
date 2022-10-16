@@ -1,12 +1,21 @@
 package pl.nowak.bitly.ecg
 
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.launch
+import pl.nowak.bitly.database.LeadDatabase
+import pl.nowak.bitly.database.getDatabase
+import pl.nowak.bitly.repository.EcgDataRepository
 import timber.log.Timber
 
-class EcgChartViewModel : ViewModel() {
+class EcgChartViewModel(application: Application) : AndroidViewModel(application) {
     var chartsDataList: MutableLiveData<List<EcgChartData>>
     var size = 12
+
+    private val database: LeadDatabase = getDatabase(application)
+    private val leadsRepository = EcgDataRepository(database)
 
     init {
         Timber.i("Charts Data View Model created")
@@ -29,6 +38,10 @@ class EcgChartViewModel : ViewModel() {
                 EcgChartData("Lead aVF", 12, size)
             )
         )
+
+        viewModelScope.launch {
+            leadsRepository.refreshData()
+        }
     }
 
     override fun onCleared() {

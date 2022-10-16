@@ -8,8 +8,8 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import pl.nowak.bitly.database.LeadDao
 import pl.nowak.bitly.database.LeadDatabase
-import pl.nowak.bitly.database.LeadDatabaseDao
 import pl.nowak.bitly.database.LeadEntry
 import java.io.IOException
 
@@ -33,7 +33,7 @@ class ExampleInstrumentedTest {
 @RunWith(AndroidJUnit4::class)
 class SleepDatabaseTest {
 
-    private lateinit var leadDao: LeadDatabaseDao
+    private lateinit var leadDao: LeadDao
     private lateinit var db: LeadDatabase
 
     @Before
@@ -45,7 +45,7 @@ class SleepDatabaseTest {
             // Allowing main thread queries, just for testing.
             .allowMainThreadQueries()
             .build()
-        leadDao = db.leadDatabaseDao
+        leadDao = db.leadDao
     }
 
     @After
@@ -57,9 +57,9 @@ class SleepDatabaseTest {
     @Test
     @Throws(Exception::class)
     fun insertAndGetEntry() {
-        val new_entry = LeadEntry(x = 1.1f, y = 2.2f, lead = LeadName.LeadAVL)
-        leadDao.insert(new_entry)
-        val entry = leadDao.get(0)
-        assertEquals(entry.lead?.name, LeadName.LeadAVL.name)
+        val newEntry = LeadEntry(x = 1.1f, y = 2.2f, lead = LeadName.LeadAVL.ordinal)
+        leadDao.insert(newEntry)
+        val entry = leadDao.getEntry(0)
+        assertEquals(entry.lead, LeadName.LeadAVL.ordinal)
     }
 }
