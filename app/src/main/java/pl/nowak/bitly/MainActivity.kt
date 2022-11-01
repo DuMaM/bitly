@@ -1,14 +1,9 @@
 package pl.nowak.bitly
 
 import android.Manifest
-import android.content.ComponentName
-import android.content.Intent
-import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.os.IBinder
 import android.widget.Toast
-import androidx.annotation.RequiresPermission
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -16,7 +11,6 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.github.mikephil.charting.utils.Utils
-import pl.nowak.bitly.ble.BluetoothLeService
 import pl.nowak.bitly.databinding.ActivityMainBinding
 import pl.nowak.bitly.ecg.EcgChartViewModel
 import timber.log.Timber
@@ -28,12 +22,10 @@ class MainActivity : AppCompatActivity() {
 
     // viewModels
     private val viewModel: MainViewModel by lazy {
-        Timber.i("Create viewModel for main activity")
         ViewModelProvider(this)[MainViewModel::class.java]
     }
 
     private val viewModelCharts: EcgChartViewModel by lazy {
-        Timber.i("Create EcgChartViewModel for main activity")
         ViewModelProvider(this)[EcgChartViewModel::class.java]
     }
 
@@ -50,30 +42,15 @@ class MainActivity : AppCompatActivity() {
         Manifest.permission.BLUETOOTH_SCAN,
         Manifest.permission.BLUETOOTH_CONNECT
     )
-    private lateinit var mBluetoothLeService: BluetoothLeService
-
-    // Code to manage Service lifecycle.
-    private val mServiceConnection: ServiceConnection = object : ServiceConnection {
-        @RequiresPermission(allOf = ["android.permission.BLUETOOTH_CONNECT", "android.permission.BLUETOOTH_ADVERTISE"])
-        override fun onServiceConnected(componentName: ComponentName, service: IBinder) {
-            mBluetoothLeService = (service as BluetoothLeService.LocalBinder).service
-            mBluetoothLeService.initialize(viewModel::updateConnectionStatus)
-        }
-
-        override fun onServiceDisconnected(componentName: ComponentName) {
-        }
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        Timber.i("Init main activity")
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
-        binding.mainActivity = this             // init variable in data block from activity_main.xml
         binding.mainViewModel = viewModel       // same as in previous line
         binding.lifecycleOwner = this           // allow data to update actions
         setContentView(binding.root)            // show this main activity
+        Timber.i("binging set")
 
-        Timber.i("Prepare recycle view components")
         /**
          * This line is important one, and removes bellow error
          * `Utils NOT INITIALIZED. You need to call Utils.init(...)
@@ -91,14 +68,14 @@ class MainActivity : AppCompatActivity() {
                 adapter.submitList(it)
             }
         }
+        Timber.i("ecgCharts views are set and app is observing live data")
+        Timber.i("init finished")
     }
 
     override fun onResume() {
         super.onResume()
         checkBlePermission()
-
-        val gattServiceIntent = Intent(this, BluetoothLeService::class.java)
-        bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE)
+        Timber.i("resumed")
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
@@ -124,6 +101,7 @@ class MainActivity : AppCompatActivity() {
         when (requestCode) {
             multiplePermissions -> checkGranted()
         }
+        Timber.i("All access granted")
     }
 
     // function to check permissions
@@ -143,17 +121,5 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
-    }
-
-    @RequiresPermission(allOf = ["android.permission.BLUETOOTH_CONNECT", "android.permission.BLUETOOTH_ADVERTISE"])
-    fun advertise() {
-        // TODO: Move to viewModel
-        mBluetoothLeService.startAdv()
-    }
-
-    @RequiresPermission(allOf = ["android.permission.BLUETOOTH_CONNECT", "android.permission.BLUETOOTH_ADVERTISE"])
-    fun disconnect() {
-        // TODO: Move to viewModel
-        mBluetoothLeService.disconnectFromDevices()
     }
 }
