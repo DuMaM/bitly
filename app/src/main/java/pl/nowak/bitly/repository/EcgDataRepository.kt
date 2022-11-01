@@ -1,17 +1,78 @@
 package pl.nowak.bitly.repository
 
+import android.Manifest
+import android.app.Application
+import android.content.ComponentName
+import android.content.Intent
+import android.content.ServiceConnection
+import android.content.pm.PackageManager
+import android.os.IBinder
+import androidx.annotation.RequiresPermission
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import androidx.lifecycle.LiveData
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.withContext
 import pl.nowak.bitly.LeadName
+import pl.nowak.bitly.ble.BluetoothLeService
 import pl.nowak.bitly.database.LeadDatabase
 import pl.nowak.bitly.database.LeadEntry
+import timber.log.Timber
 
 
-class EcgDataRepository(private val database: LeadDatabase) {
+class EcgDataRepository(private val database: LeadDatabase, val application: Application) {
+
+    private lateinit var mBluetoothLeService: BluetoothLeService
+
+    // Code to manage Service lifecycle.
+    private val mServiceConnection: ServiceConnection = object : ServiceConnection {
+        @RequiresPermission(allOf = ["android.permission.BLUETOOTH_CONNECT", "android.permission.BLUETOOTH_ADVERTISE"])
+        override fun onServiceConnected(componentName: ComponentName, service: IBinder) {
+            mBluetoothLeService = (service as BluetoothLeService.LocalBinder).service
+            Timber.i("repo is connected with ble service")
+        }
+
+        override fun onServiceDisconnected(componentName: ComponentName) {
+            Timber.i("repo is disconnected from ble service")
+        }
+    }
+
+    @RequiresPermission(allOf = ["android.permission.BLUETOOTH_CONNECT", "android.permission.BLUETOOTH_ADVERTISE"])
+    fun advertise() {
+        if (this::mBluetoothLeService.isInitialized) {
+            mBluetoothLeService.startAdv()
+        } else {
+            Timber.e("BLE service is not init yet")
+        }
+    }
+
+    @RequiresPermission(allOf = ["android.permission.BLUETOOTH_CONNECT", "android.permission.BLUETOOTH_ADVERTISE"])
+    fun disconnect() {
+        mBluetoothLeService.disconnectFromDevices()
+    }
+
     suspend fun refreshData() {
+        val gattServiceIntent = Intent(application.applicationContext, BluetoothLeService::class.java)
+        application.bindService(gattServiceIntent, mServiceConnection, AppCompatActivity.BIND_AUTO_CREATE)
+
+        if (ActivityCompat.checkSelfPermission(
+                application.applicationContext,
+                Manifest.permission.BLUETOOTH_CONNECT
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            delay(1000L)
+            return
+        }
+
+        if (!this::mBluetoothLeService.isInitialized) {
+            delay(1000L)
+            return
+        }
+
         withContext(Dispatchers.IO) {
-            // val getBleData = BLe...
+            mBluetoothLeService.mBluetoothServerFlow().collect()
             val vars: Array<LeadEntry> = emptyArray()
             database.leadDao.insert(*vars)
         }

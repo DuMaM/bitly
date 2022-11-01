@@ -3,23 +3,13 @@ package pl.nowak.bitly.ecg
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.launch
-import pl.nowak.bitly.database.LeadDatabase
-import pl.nowak.bitly.database.getDatabase
-import pl.nowak.bitly.repository.EcgDataRepository
 import timber.log.Timber
 
 class EcgChartViewModel(application: Application) : AndroidViewModel(application) {
     var chartsDataList: MutableLiveData<List<EcgChartData>>
     var size = 12
 
-    private val database: LeadDatabase = getDatabase(application)
-    private val leadsRepository = EcgDataRepository(database)
-
     init {
-        Timber.i("Charts Data View Model created")
-
         // remove error
         // Utils NOT INITIALIZED. You need to call Utils.init(...) at least once before calling Utils.convertDpToPixel(...). Otherwise conversion does not take place.
         chartsDataList = MutableLiveData(
@@ -38,15 +28,12 @@ class EcgChartViewModel(application: Application) : AndroidViewModel(application
                 EcgChartData("Lead aVF", 12, size)
             )
         )
-
-        viewModelScope.launch {
-            leadsRepository.refreshData()
-        }
+        Timber.i("created")
     }
 
     override fun onCleared() {
         super.onCleared()
-        Timber.i("Charts data Model destroyed")
+        Timber.i("destroyed")
     }
 }
 
