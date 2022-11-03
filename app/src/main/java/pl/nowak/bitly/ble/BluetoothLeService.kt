@@ -16,8 +16,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.channels.onFailure
-import kotlinx.coroutines.channels.trySendBlocking
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -27,13 +25,12 @@ import timber.log.Timber
 import java.util.*
 import kotlin.experimental.and
 
-
 /**
  * Service for managing connection and data communication with a GATT server hosted on a
  * given Bluetooth LE device.
  */
 class BluetoothLeService : Service() {
-    val scope = CoroutineScope(Dispatchers.Default) // the scope of MyUIClass, uses Dispatchers.Main
+    private val scope = CoroutineScope(Dispatchers.IO) // the scope of MyUIClass, uses Dispatchers.Main
 
     private var onConnectionStatusChange: ((String) -> Unit)? = null
 
@@ -53,7 +50,7 @@ class BluetoothLeService : Service() {
     private lateinit var mGattServer: BluetoothGattServer
 
     private val mBluetoothGattService: BluetoothGattService by lazy {
-        var service = BluetoothGattService(UUID.fromString(UUID_THROUGHPUT_MEASUREMENT), BluetoothGattService.SERVICE_TYPE_PRIMARY)
+        val service = BluetoothGattService(UUID.fromString(UUID_THROUGHPUT_MEASUREMENT), BluetoothGattService.SERVICE_TYPE_PRIMARY)
         val characteristic = BluetoothGattCharacteristic(
             UUID.fromString(UUID_THROUGHPUT_MEASUREMENT_CHAR),
             BluetoothGattCharacteristic.PROPERTY_READ or BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE,
@@ -75,15 +72,13 @@ class BluetoothLeService : Service() {
 
     private val mBluetoothDevices: HashSet<BluetoothDevice> = HashSet()
 
-
     private val mBleDataResponseResponse: AdvertiseData = AdvertiseData.Builder().setIncludeDeviceName(true).build()
 
     private val mBluetoothAdvParameters: AdvertiseSettings =
         AdvertiseSettings.Builder().setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_BALANCED).setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_LOW)
             .setConnectable(true).build()
 
-    private val mMetrics: Metrics = Metrics()
-
+    private var mMetrics: Metrics = Metrics()
 
     /**
      * Service methods
@@ -177,11 +172,46 @@ class BluetoothLeService : Service() {
         }
     }
 
+//    suspend fun sendResponse(device: BluetoothDevice?, requestId: Int, status: Int, offset: Int, value: ByteArray) {
+//        withContext(Dispatchers.IO) {
+//            val response = async { mGattServer.sendResponse(device, requestId, status, offset, value) }
+//            response.await()
+//        }
+//    }
+// ... somewhere outside BluetoothGattCallback
+
     /**
      * Server
      */
     @RequiresPermission(allOf = [BLUETOOTH_CONNECT])
     fun mBluetoothServerFlow(): Flow<ByteArray?> = callbackFlow {
+
+        fun UInt.toByteArray(isBigEndian: Boolean = true): ByteArray {
+            var bytes = byteArrayOf()
+
+            var n = this
+
+            while ((UInt.SIZE_BYTES - bytes.count()) > 0) {
+                if (n == 0x00u) {
+                    bytes += n.toByte()
+                } else {
+                    while (n != 0x00u) {
+                        val b = n.toByte()
+
+                        bytes += b
+
+                        n = n.shr(Byte.SIZE_BITS)
+                    }
+                }
+            }
+
+            return if (isBigEndian) {
+                bytes.reversedArray()
+            } else {
+                bytes
+            }
+        }
+
         val callback = object : BluetoothGattServerCallback() { // Implementation of some callback interface
             override fun onMtuChanged(device: BluetoothDevice?, mtu: Int) {
                 Timber.w("ATT MTU changed to $mtu")
@@ -191,14 +221,21 @@ class BluetoothLeService : Service() {
             override fun onCharacteristicReadRequest(device: BluetoothDevice?, requestId: Int, offset: Int, characteristic: BluetoothGattCharacteristic) {
                 super.onCharacteristicReadRequest(device, requestId, offset, characteristic)
                 Timber.d("Device tried to read characteristic: " + characteristic.uuid)
-                Timber.d("Value: " + Arrays.toString(characteristic.value))
+                val metricsData = mMetrics.mData
 
-                // TODO: This should be moved to other coroutine after emitting
-                if (offset != 0) {
+                if (characteristic.uuid.toString() == UUID_THROUGHPUT_MEASUREMENT_CHAR) {
+                    Timber.d("Character request got it ${metricsData.writeRate}")
+                    val response =
+                        metricsData.writeCount.toByteArray(false) +
+                                metricsData.writeLen.toByteArray(false) +
+                                metricsData.writeRate.toByteArray(false) +
+                                metricsData.errorCount.toByteArray(false)
+                    Timber.v("Sending " + response.contentToString())
+                    mGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, response)
+                } else {
+                    Timber.e("Undefined response for characteristic request")
                     mGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_INVALID_OFFSET, offset,  /* value (optional) */null)
-                    return
                 }
-                mGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, characteristic.value)
             }
 
             @RequiresPermission(allOf = [BLUETOOTH_CONNECT])
@@ -212,19 +249,37 @@ class BluetoothLeService : Service() {
                 value: ByteArray?
             ) {
                 super.onCharacteristicWriteRequest(device, requestId, characteristic, preparedWrite, responseNeeded, offset, value)
-                // todo check if characteristic alrady have set this value
-                Timber.v("Characteristic Write request: " + Arrays.toString(value))
+                // todo check if characteristic already have set this value
+
                 var status = BluetoothGatt.GATT_REQUEST_NOT_SUPPORTED
-                if (characteristic?.uuid == UUID.fromString(UUID_THROUGHPUT_MEASUREMENT_CHAR)) {
-                    trySendBlocking(value)
-                        .onFailure { throwable ->
-                            // Downstream has been cancelled or failed, can log here
-                        }
+                if (characteristic == null) {
+                    Timber.w("Characteristic are missing")
+                    mGattServer.sendResponse(device, requestId, status, 0, null)
+                    return
+                }
+
+                if (value == null) {
+                    Timber.w("Value was empty")
+                    mGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_FAILURE, 0, null)
+                    return
+                }
+                Timber.v("Characteristic Write Request " + characteristic.uuid + " " + value.contentToString())
+
+                if (characteristic.uuid.toString() == UUID_THROUGHPUT_MEASUREMENT_CHAR) {
+
+//                    trySendBlocking(value)
+//                        .onFailure { throwable ->
+//                            // Downstream has been cancelled or failed, can log here
+//                        }
+                    mMetrics.updateMetric(value.size.toUInt(), 0u)
                     status = BluetoothGatt.GATT_SUCCESS
+                } else {
+                    status = BluetoothGatt.GATT_REQUEST_NOT_SUPPORTED
+                    Timber.e("Not supported request")
                 }
 
                 if (responseNeeded) {
-                    mGattServer.sendResponse(device, requestId, status,  /* No need to respond with an offset */0,  /* No need to respond with a value */null)
+                    mGattServer.sendResponse(device, requestId, status, 0, null)
                 }
             }
 
@@ -236,20 +291,19 @@ class BluetoothLeService : Service() {
                     return
                 }
 
-                var msg = ""
-                when (newState) {
+                var msg = when (newState) {
                     BluetoothGatt.STATE_CONNECTED -> {
                         mBluetoothDevices.add(device)
-                        msg = "Connected to device: " + device.address
+                        "Connected to device: " + device.address
                         // onConnectionStatusChange?.invoke(msg)
                     }
                     BluetoothGatt.STATE_DISCONNECTED -> {
                         mBluetoothDevices.remove(device)
-                        msg = "Disconnected from device: " + device.address
+                        "Disconnected from device: " + device.address
                         // onConnectionStatusChange?.invoke(msg)
                     }
                     else -> {
-                        msg = "Unhandled connections change"
+                        "Unhandled connections change"
                     }
                 }
                 Timber.v(msg)
@@ -280,7 +334,7 @@ class BluetoothLeService : Service() {
                 super.onDescriptorWriteRequest(device, requestId, descriptor, preparedWrite, responseNeeded, offset, value)
                 Timber.v("Descriptor Write Request " + descriptor.uuid + " " + value.contentToString())
                 var status = BluetoothGatt.GATT_SUCCESS
-                if (descriptor.uuid == UUID.fromString(UUID_THROUGHPUT_MEASUREMENT_DES)) {
+                if (descriptor.uuid.toString() == UUID_THROUGHPUT_MEASUREMENT_DES) {
                     if (value.size != 1) {
                         status = BluetoothGatt.GATT_INVALID_ATTRIBUTE_LENGTH
                     } else {
@@ -292,9 +346,9 @@ class BluetoothLeService : Service() {
                             testType = (testType shl 8) + (b and 0xFF.toByte())
                         }
 
+                        mMetrics.reset()
                         when (testType) {
                             BleTestType.BT_TEST_TYPE_RESET.ordinal -> {
-                                mMetrics.reset()
                                 mMetrics.mBleTestType = BleTestType.BT_TEST_TYPE_UNKNOWN
                             }
                             BleTestType.BT_TEST_TYPE_ANALOG.ordinal -> {
@@ -319,7 +373,7 @@ class BluetoothLeService : Service() {
                     descriptor.value = value
                 }
                 if (responseNeeded) {
-                    mGattServer.sendResponse(device, requestId, status,  /* No need to respond with offset */0,  /* No need to respond with a value */null)
+                    mGattServer.sendResponse(device, requestId, status, 0, null)
                 }
             }
 
@@ -349,9 +403,6 @@ class BluetoothLeService : Service() {
          * In both cases, callback will be properly unregistered.
          */
         awaitClose { mGattServer.clearServices() }
-    }
-
-    private var mBluetoothGattServerCallback: BluetoothGattServerCallback = object : BluetoothGattServerCallback() {
     }
 
     // All BLE characteristic UUIDs are of the form:

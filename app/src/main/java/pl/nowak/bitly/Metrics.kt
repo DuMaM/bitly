@@ -12,50 +12,54 @@ enum class BleTestType {
     BT_TEST_TYPE_SIM
 }
 
+/** The number of packets sent. */
+data class MetricsData(
+    /** Number of GATT writes received. */
+    var writeCount: UInt = 0u,
+
+    /** Number of bytes received. */
+    var writeLen: UInt = 0u,
+
+    /** Transfer speed in bits per second (kbps). */
+    var writeRate: UInt = 0u,
+
+    /** error count if BER is enabled. **/
+    var errorCount: UInt = 0u
+) {
+    fun clean() {
+        writeCount = 0u
+        writeLen = 0u
+        writeRate = 0u
+        errorCount = 0u
+    }
+}
+
+// https://www.baeldung.com/kotlin/unsigned-integers
 class Metrics {
 
-    /** The number of packets sent. */
-    inner class Data {
-        /** Number of GATT writes received. */
-        var writeCount: UInt = 0u
-
-        /** Number of bytes received. */
-        var writeLen: UInt = 0u
-
-        /** Transfer speed in bits per second (kbps). */
-        var writeRate: UInt = 0u
-
-        /** error count if BER is enabled. **/
-        var errorCount: Int = 0
-
-        fun clean() {
-            writeCount = 0u
-            writeLen = 0u
-            writeRate = 0u
-            errorCount = 0
-        }
-    }
-
     var mBleTestType: BleTestType = BleTestType.BT_TEST_TYPE_UNKNOWN
-    private var mData = Data()
-    private var mDelta: Long = -1
-    private var mStart: Long = -1
+    var mData = MetricsData()
 
-    fun dumpStats() {
-        Timber.i("[local] sent $mData.write_len bytes ($mData.write_len_KB KB) in $mDelta ms at $mData.write_rate kbps")
+    private var mDelta: ULong = 0u
+    private var mStart: ULong = 0u
+
+    private fun dumpStats() {
+        Timber.i("[local] got ${mData.writeLen} bytes (${mData.writeLen / (8u * 1024u)} KB) in ${mDelta / 1000u} ms at ${mData.writeRate / 1024u} kbps")
     }
 
-    fun updateMetric(writeLen: Int, writeCount: Int, berError: Int) {
+    fun updateMetric(writeLen: UInt, berError: UInt) {
         updateTimer()
-        mData.writeCount += writeCount.toUInt()
-        mData.writeLen += writeLen.toUInt()
+        mData.writeCount++
+        mData.writeLen += writeLen
         mData.errorCount += berError
-        mData.writeRate = ((mData.writeLen * 8u).toLong() / mDelta).toUInt()
+        mData.writeRate = ((mData.writeLen.toULong() * 8u * 1000000u) / mDelta).toUInt()
+        dumpStats()
     }
 
-    private fun start() {
+    fun start() {
         startTimer()
         mData.clean()
+        Timber.v("Connection metrics measurement started")
     }
 
     fun reset() {
@@ -67,11 +71,12 @@ class Metrics {
     }
 
     private fun startTimer() {
-        mStart = System.nanoTime()
+        mStart = System.nanoTime().toULong() / 1000u
+        mDelta = 0u
     }
 
     private fun updateTimer() {
-        mDelta = (System.nanoTime() - mStart)
+        mDelta = (System.nanoTime().toULong() / 1000u) - mStart
     }
 
     private fun stopTimer() {
