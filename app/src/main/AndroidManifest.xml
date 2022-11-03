@@ -8,7 +8,7 @@
         android:name="android.permission.BLUETOOTH_ADMIN"
         android:required="true" />
     <!--
- Needed only if your app looks for Bluetooth devices.
+         Needed only if your app looks for Bluetooth devices.
          If your app doesn't use Bluetooth scan results to derive physical
          location information, you can strongly assert that your app
          doesn't derive physical location.
@@ -37,11 +37,7 @@
         android:theme="@style/Theme.Bitly">
         <activity
             android:name=".stats.StatsActivity"
-            android:exported="false">
-            <meta-data
-                android:name="android.app.lib_name"
-                android:value="" />
-        </activity>
+            android:exported="false"></activity>
         <activity
             android:name=".MainActivity"
             android:exported="true">
