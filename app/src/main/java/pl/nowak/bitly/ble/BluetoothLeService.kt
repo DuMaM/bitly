@@ -16,12 +16,15 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.channels.onFailure
+import kotlinx.coroutines.channels.trySendBlocking
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import pl.nowak.bitly.BleTestType
 import pl.nowak.bitly.Metrics
 import timber.log.Timber
+import java.nio.ByteBuffer
 import java.util.*
 import kotlin.experimental.and
 
@@ -183,10 +186,49 @@ class BluetoothLeService : Service() {
     /**
      * Server
      */
+    @OptIn(ExperimentalUnsignedTypes::class)
     @RequiresPermission(allOf = [BLUETOOTH_CONNECT])
-    fun mBluetoothServerFlow(): Flow<ByteArray?> = callbackFlow {
+    fun mBluetoothServerFlow(): Flow<UIntArray> = callbackFlow {
+
+        var byteBuffer: ByteArray = ByteArray(4)
+        var dataBuffer = UIntArray(13)
+        var pos = 0
+        var ecgPackPos = 0
+
+        fun setCommunication() {
+            ecgPackPos = 0
+            pos = 0
+        }
+
+        fun ByteArray.getUIntAt(idx: Int, size: Int = 4, isBigEndian: Boolean = true): UInt {
+            if (isBigEndian) {
+                return ((this[idx].toUInt() and 0xFFu) shl 24) or
+                        ((this[idx + 1].toUInt() and 0xFFu) shl 16) or
+                        ((this[idx + 2].toUInt() and 0xFFu) shl 8) or
+                        (this[idx + 3].toUInt() and 0xFFu)
+            } else {
+                return ((this[idx + 3].toUInt() and 0xFFu) shl 24) or
+                        ((this[idx + 2].toUInt() and 0xFFu) shl 16) or
+                        ((this[idx + 1].toUInt() and 0xFFu) shl 8) or
+                        (this[idx].toUInt() and 0xFFu)
+            }
+        }
+
+
+        fun ByteArray.getIntAt(index: Int = 0, size: Int = 4, isBigEndian: Boolean = true): Int {
+            if (size > Int.SIZE_BYTES) {
+                return 0
+            }
+
+            var slice = this
+            if (slice.size > size) {
+                slice = slice.sliceArray(IntRange(index, index + size - 1))
+            }
+            return ByteBuffer.wrap(slice).int
+        }
 
         fun UInt.toByteArray(isBigEndian: Boolean = true): ByteArray {
+            // https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-byte-array/#kotlin.ByteArray
             var bytes = byteArrayOf()
 
             var n = this
@@ -263,7 +305,6 @@ class BluetoothLeService : Service() {
                     mGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_FAILURE, 0, null)
                     return
                 }
-                Timber.v("Characteristic Write Request " + characteristic.uuid + " " + value.contentToString())
 
                 if (characteristic.uuid.toString() == UUID_THROUGHPUT_MEASUREMENT_CHAR) {
 
@@ -272,8 +313,38 @@ class BluetoothLeService : Service() {
 //                            // Downstream has been cancelled or failed, can log here
 //                        }
                     mMetrics.updateMetric(value.size.toUInt(), 0u)
-                    status = BluetoothGatt.GATT_SUCCESS
+
+                    value.forEach { element ->
+                        byteBuffer[pos] = element
+                        pos++
+
+                        if (pos == byteBuffer.size - 1) {
+                            // clear last value to fill up buffer
+                            byteBuffer[pos] = 0
+
+                            // save data
+                            dataBuffer[ecgPackPos] = byteBuffer.getUIntAt(0, byteBuffer.size, false)
+
+                            // clean up after operation
+                            pos = 0
+
+                            // mark new data in buffer
+                            ecgPackPos++
+                        }
+
+                        if (ecgPackPos == 13) {
+                            Timber.v(dataBuffer.contentToString())
+                            ecgPackPos = 0
+
+                            trySendBlocking(dataBuffer)
+                                .onFailure { throwable ->
+                                    // Downstream has been cancelled or failed, can log here
+                                }
+                        }
+                    }
+
                 } else {
+                    Timber.v("Characteristic Write Request " + characteristic.uuid + " " + value.contentToString())
                     status = BluetoothGatt.GATT_REQUEST_NOT_SUPPORTED
                     Timber.e("Not supported request")
                 }
@@ -345,6 +416,8 @@ class BluetoothLeService : Service() {
                         for (b in value) {
                             testType = (testType shl 8) + (b and 0xFF.toByte())
                         }
+
+                        setCommunication()
 
                         mMetrics.reset()
                         when (testType) {

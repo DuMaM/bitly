@@ -13,12 +13,12 @@ import androidx.core.app.ActivityCompat
 import androidx.lifecycle.LiveData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.withContext
 import pl.nowak.bitly.LeadName
 import pl.nowak.bitly.ble.BluetoothLeService
 import pl.nowak.bitly.database.LeadDatabase
 import pl.nowak.bitly.database.LeadEntry
+import pl.nowak.bitly.ecg.EcgData
 import timber.log.Timber
 
 
@@ -72,9 +72,29 @@ class EcgDataRepository(private val database: LeadDatabase, val application: App
         }
 
         withContext(Dispatchers.IO) {
-            mBluetoothLeService.mBluetoothServerFlow().collect()
-            val vars: Array<LeadEntry> = emptyArray()
-            database.leadDao.insert(*vars)
+            mBluetoothLeService.mBluetoothServerFlow().collect { data ->
+                Timber.v(data.contentToString())
+
+                val ecgData: EcgData = EcgData.loadData(data)
+
+                ecgData.apply {
+                    val timestamp = System.currentTimeMillis().toFloat()
+                    database.leadDao.insert(
+                        LeadEntry(x = v1_c1.toFloat(), y = timestamp, lead = LeadName.LeadV1.ordinal),
+                        LeadEntry(x = v2_c2.toFloat(), y = timestamp, lead = LeadName.LeadV2.ordinal),
+                        LeadEntry(x = v3_c3.toFloat(), y = timestamp, lead = LeadName.LeadV3.ordinal),
+                        LeadEntry(x = v4_c4.toFloat(), y = timestamp, lead = LeadName.LeadV4.ordinal),
+                        LeadEntry(x = v5_c5.toFloat(), y = timestamp, lead = LeadName.LeadV5.ordinal),
+                        LeadEntry(x = v6_c6.toFloat(), y = timestamp, lead = LeadName.LeadV6.ordinal),
+                        LeadEntry(x = lead1.toFloat(), y = timestamp, lead = LeadName.LeadI.ordinal),
+                        LeadEntry(x = lead2.toFloat(), y = timestamp, lead = LeadName.LeadII.ordinal),
+                        LeadEntry(x = lead3.toFloat(), y = timestamp, lead = LeadName.LeadIII.ordinal),
+                        LeadEntry(x = aVF.toFloat(), y = timestamp, lead = LeadName.LeadAVL.ordinal),
+                        LeadEntry(x = aVR.toFloat(), y = timestamp, lead = LeadName.LeadAVR.ordinal),
+                        LeadEntry(x = aVF.toFloat(), y = timestamp, lead = LeadName.LeadAVF.ordinal)
+                    )
+                }
+            }
         }
     }
 
