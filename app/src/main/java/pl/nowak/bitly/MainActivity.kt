@@ -65,7 +65,8 @@ class MainActivity : AppCompatActivity() {
         ecgChartsView.layoutManager = LinearLayoutManager(this)
         viewModelCharts.chartsDataList.observe(this) {
             it?.let {
-                adapter.submitList(it)
+                adapter.submitList(it.toMutableList())
+                Timber.i("new data received")
             }
         }
         Timber.i("ecgCharts views are set and app is observing live data")
