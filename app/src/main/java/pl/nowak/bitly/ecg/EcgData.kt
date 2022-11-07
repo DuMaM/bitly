@@ -1,6 +1,7 @@
 package pl.nowak.bitly.ecg
 
 data class EcgData(
+    var timestamp: UInt,
     var status: UInt,
     var v6_c6: Int,
     var lead1: Int,
@@ -33,7 +34,7 @@ data class EcgData(
         fun loadData(data: UIntArray): EcgData {
             return EcgData(
                 data[0],
-                data[1].convToI32(),
+                data[1],
                 data[2].convToI32(),
                 data[3].convToI32(),
                 data[4].convToI32(),
@@ -44,7 +45,8 @@ data class EcgData(
                 data[9].convToI32(),
                 data[10].convToI32(),
                 data[11].convToI32(),
-                data[12].convToI32()
+                data[12].convToI32(),
+                data[13].convToI32()
             )
         }
 

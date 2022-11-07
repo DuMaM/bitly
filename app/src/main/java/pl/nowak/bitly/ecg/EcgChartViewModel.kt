@@ -15,7 +15,7 @@ import kotlin.time.Duration.Companion.seconds
 @SuppressLint("MissingPermission")
 class EcgChartViewModel(application: Application) : AndroidViewModel(application) {
     var chartsDataList: MutableLiveData<List<EcgChartData>>
-    var size = 12
+    var size = 40
 
     private fun <T> MutableLiveData<T>.forceRefresh() {
         this.postValue(value)
@@ -89,19 +89,18 @@ class EcgChartViewModel(application: Application) : AndroidViewModel(application
             while (true) {
                 leadsRepository.getData()?.collect {
                     it.apply {
-                        val timestamp = System.currentTimeMillis().toFloat()
-                        chartsDataList.value?.get(0)?.update(timestamp, v1_c1.toFloat())
-                        chartsDataList.value?.get(1)?.update(timestamp, v2_c2.toFloat())
-                        chartsDataList.value?.get(2)?.update(timestamp, v3_c3.toFloat())
-                        chartsDataList.value?.get(3)?.update(timestamp, v4_c4.toFloat())
-                        chartsDataList.value?.get(4)?.update(timestamp, v5_c5.toFloat())
-                        chartsDataList.value?.get(5)?.update(timestamp, v6_c6.toFloat())
-                        chartsDataList.value?.get(6)?.update(timestamp, lead1.toFloat())
-                        chartsDataList.value?.get(7)?.update(timestamp, lead2.toFloat())
-                        chartsDataList.value?.get(8)?.update(timestamp, lead3.toFloat())
-                        chartsDataList.value?.get(9)?.update(timestamp, aVR.toFloat())
-                        chartsDataList.value?.get(10)?.update(timestamp, aVL.toFloat())
-                        chartsDataList.value?.get(11)?.update(timestamp, aVF.toFloat())
+                        chartsDataList.value?.get(0)?.update(timestamp.toFloat(), v1_c1.toFloat())
+                        chartsDataList.value?.get(1)?.update(timestamp.toFloat(), v2_c2.toFloat())
+                        chartsDataList.value?.get(2)?.update(timestamp.toFloat(), v3_c3.toFloat())
+                        chartsDataList.value?.get(3)?.update(timestamp.toFloat(), v4_c4.toFloat())
+                        chartsDataList.value?.get(4)?.update(timestamp.toFloat(), v5_c5.toFloat())
+                        chartsDataList.value?.get(5)?.update(timestamp.toFloat(), v6_c6.toFloat())
+                        chartsDataList.value?.get(6)?.update(timestamp.toFloat(), lead1.toFloat())
+                        chartsDataList.value?.get(7)?.update(timestamp.toFloat(), lead2.toFloat())
+                        chartsDataList.value?.get(8)?.update(timestamp.toFloat(), lead3.toFloat())
+                        chartsDataList.value?.get(9)?.update(timestamp.toFloat(), aVR.toFloat())
+                        chartsDataList.value?.get(10)?.update(timestamp.toFloat(), aVL.toFloat())
+                        chartsDataList.value?.get(11)?.update(timestamp.toFloat(), aVF.toFloat())
                     }
                     triggerUpdateWithDelay(1.seconds)
                 }

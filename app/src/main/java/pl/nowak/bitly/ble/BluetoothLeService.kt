@@ -191,7 +191,7 @@ class BluetoothLeService : Service() {
     fun mBluetoothServerFlow(): Flow<UIntArray> = callbackFlow {
 
         var byteBuffer: ByteArray = ByteArray(4)
-        var dataBuffer = UIntArray(13)
+        var dataBuffer = UIntArray(14)
         var pos = 0
         var ecgPackPos = 0
 
@@ -327,7 +327,7 @@ class BluetoothLeService : Service() {
                             ecgPackPos++
                         }
 
-                        if (ecgPackPos == 13) {
+                        if (ecgPackPos == dataBuffer.size) {
                             Timber.v(dataBuffer.contentToString())
                             ecgPackPos = 0
 
