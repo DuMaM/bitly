@@ -1,20 +1,18 @@
 package pl.nowak.bitly
 
-import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.github.mikephil.charting.components.YAxis
-import com.github.mikephil.charting.data.*
-import com.github.mikephil.charting.utils.ColorTemplate
+import com.github.mikephil.charting.data.Entry
+import com.github.mikephil.charting.data.LineData
+import com.github.mikephil.charting.data.LineDataSet
 import pl.nowak.bitly.databinding.EcgChartItemBinding
 import pl.nowak.bitly.ecg.EcgChart
 import pl.nowak.bitly.ecg.EcgChartData
 import pl.nowak.bitly.ecg.EcgChartDiffCallback
-import java.util.concurrent.TimeUnit
-import kotlin.random.Random
+
 
 class EcgChartListAdapter : ListAdapter<EcgChartData, EcgChartListAdapter.EcgChartViewHolder>(EcgChartDiffCallback()) {
 
@@ -30,45 +28,47 @@ class EcgChartListAdapter : ListAdapter<EcgChartData, EcgChartListAdapter.EcgCha
     class EcgChartViewHolder private constructor(private val binding: EcgChartItemBinding) : RecyclerView.ViewHolder(binding.root) {
         private val ecgLabel: TextView = binding.ecgLineLabel
         private val ecgChart: EcgChart = binding.ecgChart
+        private val setIndex = 0
 
         fun bind(item: EcgChartData) {
-            val lineSet = ecgChart.defaultDataSettings(LineDataSet(item.lineDataRestricted.toList(), item.label))
-            ecgChart.defaultAxisSettings()
             ecgLabel.text = item.label
-            ecgChart.data = LineData(lineSet)
+            addEntries(item)
         }
 
-        private fun setData(count: Int, range: Double): BarData {
-            // now in hours
-            val now: Long = TimeUnit.MILLISECONDS.toHours(System.currentTimeMillis())
-            val values: ArrayList<BarEntry> = ArrayList()
+        private fun addEntries(item: EcgChartData) {
+            ecgChart.apply {
+                if (data == null) {
+                    var lineSet = LineDataSet(emptyList<Entry>().toMutableList(), "data")
+                    data = LineData(lineSet)
+                }
 
-            // count = hours
-            val to = (now + count).toFloat()
+                item.lineDataRestricted.forEach {
+                    data.addEntry(it, setIndex)
+                }
 
-            // increment by 1 hour
-            var x = now.toFloat()
-            while (x < to) {
-                val y: Double = Random.nextDouble(range, 50.0)
-                values.add(BarEntry(x, y.toFloat())) // add one entry per hour
-                x++
+                if (item.lineDataRestricted.size > 1) {
+                    xAxis.axisMaximum = item.lineDataRestricted.last().x
+                    xAxis.axisMinimum = item.lineDataRestricted.first().x
+                }
+
+                // notify data has been updates
+                data.notifyDataChanged()
+
+                // let the chart know it's data has changed
+                notifyDataSetChanged()
+
+                // limit the number of visible entries
+                // ecgChart.setVisibleXRangeMaximum(120f)
+                // ecgChart.setVisibleYRange(30, AxisDependency.LEFT);
+
+                // move to the latest entry
+                //moveViewToX(item.getLastTimestamp())
+
+                // this automatically refreshes the chart (calls invalidate())
+                // chart.moveViewTo(data.getXValCount()-7, 55f,
+                // AxisDependency.LEFT);
+                invalidate()
             }
-
-            // create a dataset and give it a type
-            val set1 = BarDataSet(values, "DataSet 1")
-            set1.axisDependency = YAxis.AxisDependency.LEFT
-            set1.color = ColorTemplate.getHoloBlue()
-            set1.valueTextColor = ColorTemplate.getHoloBlue()
-            set1.setDrawValues(false)
-            set1.highLightColor = Color.rgb(244, 117, 117)
-
-            // create a data object with the data sets
-            val data = BarData(set1)
-            data.setValueTextColor(Color.WHITE)
-            data.setValueTextSize(9f)
-
-            // set data
-            return data
         }
 
         companion object {
