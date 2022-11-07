@@ -9,12 +9,6 @@ class EcgChartDiffCallback : DiffUtil.ItemCallback<EcgChartData>() {
     }
 
     override fun areContentsTheSame(oldItem: EcgChartData, newItem: EcgChartData): Boolean {
-        return if (oldItem.lineDataRestricted.size < newItem.lineDataRestricted.size) {
-            // init situation where there is not full window set
-            false
-        } else {
-            // other cases where we are comparing indexes
-            oldItem.getLastTimestamp() == newItem.getLastTimestamp()
-        }
+        return oldItem.cnt == newItem.cnt
     }
 }
