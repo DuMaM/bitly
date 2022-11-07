@@ -91,9 +91,10 @@ dependencies {
     implementation 'com.jakewharton.timber:timber:5.0.1'
     // -> graphs
     // https://github.com/AppDevNext/MPAndroidChart
+    implementation 'com.github.AppDevNext:MPAndroidChart:3.1.0.9'
     // active fork of
     // https://github.com/PhilJay/MPAndroidChart
-    implementation 'com.github.AppDevNext:MPAndroidChart:3.1.0.9'
+    // implementation 'com.github.PhilJay:MPAndroidChart:3.1.0'
 
     // dev
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
