@@ -307,11 +307,6 @@ class BluetoothLeService : Service() {
                 }
 
                 if (characteristic.uuid.toString() == UUID_THROUGHPUT_MEASUREMENT_CHAR) {
-
-//                    trySendBlocking(value)
-//                        .onFailure { throwable ->
-//                            // Downstream has been cancelled or failed, can log here
-//                        }
                     mMetrics.updateMetric(value.size.toUInt(), 0u)
 
                     value.forEach { element ->
