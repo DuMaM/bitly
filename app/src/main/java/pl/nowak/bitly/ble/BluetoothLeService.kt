@@ -16,7 +16,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.channels.onFailure
 import kotlinx.coroutines.channels.trySendBlocking
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -332,9 +331,6 @@ class BluetoothLeService : Service() {
                             ecgPackPos = 0
 
                             trySendBlocking(dataBuffer)
-                                .onFailure { throwable ->
-                                    // Downstream has been cancelled or failed, can log here
-                                }
                         }
                     }
 
@@ -399,7 +395,7 @@ class BluetoothLeService : Service() {
             ) {
                 super.onDescriptorWriteRequest(device, requestId, descriptor, preparedWrite, responseNeeded, offset, value)
                 Timber.v("Descriptor Write Request " + descriptor.uuid + " " + value.contentToString())
-                var status = BluetoothGatt.GATT_SUCCESS
+                var status = BluetoothGatt.GATT_REQUEST_NOT_SUPPORTED
                 if (descriptor.uuid.toString() == UUID_THROUGHPUT_MEASUREMENT_DES) {
                     if (value.size != 1) {
                         status = BluetoothGatt.GATT_INVALID_ATTRIBUTE_LENGTH
@@ -437,9 +433,9 @@ class BluetoothLeService : Service() {
                         }
                     }
                 } else {
-                    status = BluetoothGatt.GATT_SUCCESS
                     descriptor.value = value
                 }
+
                 if (responseNeeded) {
                     mGattServer.sendResponse(device, requestId, status, 0, null)
                 }

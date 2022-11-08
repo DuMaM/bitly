@@ -96,6 +96,9 @@ dependencies {
     // https://github.com/PhilJay/MPAndroidChart
     // implementation 'com.github.PhilJay:MPAndroidChart:3.1.0'
 
+    // think of this
+    // https://github.com/AnyChart/AnyChart-Android/wiki/Chart-data-update#1-update-chart-data
+
     // dev
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'

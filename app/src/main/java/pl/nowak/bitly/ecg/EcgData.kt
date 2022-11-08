@@ -61,11 +61,12 @@ data class EcgData(
         }
     }
 
-
+    @kotlin.ExperimentalUnsignedTypes
     fun convI32ToU24(i32_val: Int): UInt {
         return ((i32_val shl 8).toUInt()) shr 8
     }
 
+    @kotlin.ExperimentalUnsignedTypes
     fun convU24ToRaw(u24_val: UInt, pos: Int): UIntArray {
         var raw = UIntArray(3)
         raw[pos + 0] = 0xFFu and (u24_val shr 16)

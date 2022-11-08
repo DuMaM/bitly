@@ -6,16 +6,18 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.*
+import pl.nowak.bitly.LeadName
+import pl.nowak.bitly.database.LeadEntry
 import pl.nowak.bitly.database.getDatabase
 import pl.nowak.bitly.repository.EcgDataRepository
 import timber.log.Timber
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Duration.Companion.milliseconds
 
 @SuppressLint("MissingPermission")
 class EcgChartViewModel(application: Application) : AndroidViewModel(application) {
     var chartsDataList: MutableLiveData<List<EcgChartData>>
-    var size = 40
+    var size = 800
 
     private fun <T> MutableLiveData<T>.forceRefresh() {
         this.postValue(value)
@@ -38,6 +40,7 @@ class EcgChartViewModel(application: Application) : AndroidViewModel(application
             chartsDataList.value?.forEach {
                 Timber.d("${it.lineDataRestricted.toArray().contentToString()}")
             }
+
             isBlocked = false
         }
     }
@@ -102,7 +105,8 @@ class EcgChartViewModel(application: Application) : AndroidViewModel(application
                         chartsDataList.value?.get(10)?.update(timestamp.toFloat(), aVL.toFloat())
                         chartsDataList.value?.get(11)?.update(timestamp.toFloat(), aVF.toFloat())
                     }
-                    triggerUpdateWithDelay(1.seconds)
+                    triggerUpdateWithDelay(300.milliseconds)
+
                 }
             }
         }

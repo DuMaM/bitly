@@ -9,6 +9,6 @@ class EcgChartDiffCallback : DiffUtil.ItemCallback<EcgChartData>() {
     }
 
     override fun areContentsTheSame(oldItem: EcgChartData, newItem: EcgChartData): Boolean {
-        return oldItem.cnt == newItem.cnt
+        return !oldItem.newVal
     }
 }

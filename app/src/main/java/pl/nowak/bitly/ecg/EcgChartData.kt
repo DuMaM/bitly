@@ -4,12 +4,14 @@ import com.github.mikephil.charting.data.Entry
 
 // import kotlin.collections.ArrayDeque
 data class EcgChartData(
-    var label: String,
-    var id: Int,
-    var size: Int
+    val label: String,
+    val id: Int,
+    val size: Int
 ) {
     var lineDataRestricted: ArrayDeque<Entry> = ArrayDeque(size)
-    var cnt: Long = 0
+
+    @Volatile
+    var newVal: Boolean = false
 
     fun getLastTimestamp(): Float {
         return if (lineDataRestricted.size > 0) {
@@ -21,11 +23,11 @@ data class EcgChartData(
 
     fun update(x: Float, y: Float) {
         // add to the end
-        val entry = Entry(x, y)
+        val entry = Entry(x, y / 1000000)
         if (lineDataRestricted.size > size) {
             lineDataRestricted.removeFirst()
         }
         lineDataRestricted.add(entry)
-        cnt++
+        newVal = true
     }
 }
