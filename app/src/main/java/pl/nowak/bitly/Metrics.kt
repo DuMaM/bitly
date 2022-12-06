@@ -53,7 +53,7 @@ class Metrics {
         mData.writeLen += writeLen
         mData.errorCount += berError
         mData.writeRate = ((mData.writeLen.toULong() * 8u * 1000000u) / mDelta).toUInt()
-        dumpStats(writeLen)
+        // dumpStats(writeLen)
     }
 
     fun start() {

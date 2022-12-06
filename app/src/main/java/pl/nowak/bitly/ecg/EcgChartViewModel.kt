@@ -35,9 +35,9 @@ class EcgChartViewModel(application: Application) : AndroidViewModel(application
             delay(duration)
             chartsDataList.forceRefresh()
             Timber.d("Graph update triggered")
-            chartsDataList.value?.forEach {
-                Timber.d(it.lineDataRestricted.toArray().contentToString())
-            }
+//            chartsDataList.value?.forEach {
+//                Timber.d(it.lineDataRestricted.toArray().contentToString())
+//            }
 
             isBlocked = false
         }
@@ -99,7 +99,7 @@ class EcgChartViewModel(application: Application) : AndroidViewModel(application
                         }
                     }
 
-                    triggerUpdateWithDelay(100.milliseconds)
+                    triggerUpdateWithDelay(4.milliseconds)
                 }
             }
         }

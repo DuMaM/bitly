@@ -304,6 +304,11 @@ class BluetoothLeService : Service() {
                 super.onCharacteristicWriteRequest(device, requestId, characteristic, preparedWrite, responseNeeded, offset, value)
                 // todo check if characteristic already have set this value
 
+                if (!this@BluetoothLeService::mGattServer.isInitialized) {
+                    Timber.e("gatt is not initiated but executed")
+                    return
+                }
+
                 var status = BluetoothGatt.GATT_REQUEST_NOT_SUPPORTED
                 if (characteristic == null) {
                     Timber.w("Characteristic are missing")
