@@ -27,6 +27,7 @@ import java.nio.ByteBuffer
 import java.util.*
 import kotlin.experimental.and
 
+
 /**
  * Service for managing connection and data communication with a GATT server hosted on a
  * given Bluetooth LE device.
@@ -37,12 +38,15 @@ class BluetoothLeService : Service() {
     private var onConnectionStatusChange: ((String) -> Unit)? = null
 
     private val mBluetoothManager: BluetoothManager by lazy {
+        //getSystemService(BluetoothManager::class.java) as BluetoothManager
         getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
     }
 
     private val mBluetoothAdapter: BluetoothAdapter by lazy {
         val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         bluetoothManager.adapter
+
+        //mBluetoothManager.adapter
     }
 
     private val mBluetoothAdvertiser: BluetoothLeAdvertiser by lazy {
@@ -99,11 +103,13 @@ class BluetoothLeService : Service() {
         return mBinder
     }
 
+    @RequiresPermission(allOf = [BLUETOOTH_CONNECT, BLUETOOTH_ADVERTISE])
     override fun onUnbind(intent: Intent): Boolean {
         // After using a given device, you should make sure that BluetoothGatt.close() is called
         // such that resources are cleaned up properly.  In this particular example, close() is
         // invoked when the UI is disconnected from the Service.
         Timber.i("service disconnected from main thread")
+        //disconnectFromDevices()
         return super.onUnbind(intent)
     }
 
@@ -200,13 +206,13 @@ class BluetoothLeService : Service() {
         }
 
         fun ByteArray.getUIntAt(idx: Int, size: Int = 4, isBigEndian: Boolean = true): UInt {
-            if (isBigEndian) {
-                return ((this[idx].toUInt() and 0xFFu) shl 24) or
+            return if (isBigEndian) {
+                ((this[idx].toUInt() and 0xFFu) shl 24) or
                         ((this[idx + 1].toUInt() and 0xFFu) shl 16) or
                         ((this[idx + 2].toUInt() and 0xFFu) shl 8) or
                         (this[idx + 3].toUInt() and 0xFFu)
             } else {
-                return ((this[idx + 3].toUInt() and 0xFFu) shl 24) or
+                ((this[idx + 3].toUInt() and 0xFFu) shl 24) or
                         ((this[idx + 2].toUInt() and 0xFFu) shl 16) or
                         ((this[idx + 1].toUInt() and 0xFFu) shl 8) or
                         (this[idx].toUInt() and 0xFFu)
@@ -261,6 +267,12 @@ class BluetoothLeService : Service() {
             @RequiresPermission(allOf = [BLUETOOTH_CONNECT])
             override fun onCharacteristicReadRequest(device: BluetoothDevice?, requestId: Int, offset: Int, characteristic: BluetoothGattCharacteristic) {
                 super.onCharacteristicReadRequest(device, requestId, offset, characteristic)
+
+                if (!this@BluetoothLeService::mGattServer.isInitialized) {
+                    Timber.e("gatt is not initiated but executed")
+                    return
+                }
+
                 Timber.d("Device tried to read characteristic: " + characteristic.uuid)
                 val metricsData = mMetrics.mData
 
@@ -327,7 +339,7 @@ class BluetoothLeService : Service() {
                         }
 
                         if (ecgPackPos == dataBuffer.size) {
-                            Timber.v(dataBuffer.contentToString())
+                            //Timber.v(dataBuffer.contentToString())
                             ecgPackPos = 0
 
                             trySendBlocking(dataBuffer)
@@ -374,6 +386,12 @@ class BluetoothLeService : Service() {
             @RequiresPermission(allOf = [BLUETOOTH_CONNECT])
             override fun onDescriptorReadRequest(device: BluetoothDevice?, requestId: Int, offset: Int, descriptor: BluetoothGattDescriptor) {
                 super.onDescriptorReadRequest(device, requestId, offset, descriptor)
+
+                if (!this@BluetoothLeService::mGattServer.isInitialized) {
+                    Timber.e("gatt is not initiated but executed")
+                    return
+                }
+
                 Timber.d("Device tried to read descriptor: " + descriptor.uuid)
                 Timber.d("Value: " + Arrays.toString(descriptor.value))
                 if (offset != 0) {
@@ -396,6 +414,12 @@ class BluetoothLeService : Service() {
                 super.onDescriptorWriteRequest(device, requestId, descriptor, preparedWrite, responseNeeded, offset, value)
                 Timber.v("Descriptor Write Request " + descriptor.uuid + " " + value.contentToString())
                 var status = BluetoothGatt.GATT_REQUEST_NOT_SUPPORTED
+
+                if (!this@BluetoothLeService::mGattServer.isInitialized) {
+                    Timber.e("gatt is not initiated but executed")
+                    return
+                }
+
                 if (descriptor.uuid.toString() == UUID_THROUGHPUT_MEASUREMENT_DES) {
                     if (value.size != 1) {
                         status = BluetoothGatt.GATT_INVALID_ATTRIBUTE_LENGTH
@@ -489,7 +513,9 @@ class BluetoothLeService : Service() {
         Timber.d("Disconnecting devices...")
         for (device in mBluetoothDevices) {
             Timber.d("Devices: " + device.address + " " + device.name)
-            mGattServer.cancelConnection(device)
+            if (this@BluetoothLeService::mGattServer.isInitialized) {
+                mGattServer.cancelConnection(device)
+            }
             Handler(Looper.getMainLooper()).postDelayed({
                 if (mBluetoothManager.getConnectionState(device, BluetoothGatt.GATT) == BluetoothGatt.STATE_CONNECTED) {
                     Timber.i("Device disconnected: " + device.address)

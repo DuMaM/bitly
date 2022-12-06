@@ -50,6 +50,8 @@ class EcgChart : LineChart {
         yAxis.setDrawGridLines(true)
         yAxis.setDrawGridLinesBehindData(false)
         yAxis.gridColor = holeDarkBlue
+        yAxis.setAxisMaxValue(200f)
+        yAxis.setAxisMinValue(-200f)
 
         // mode for X axis
         xAxis.setDrawLabels(false)
