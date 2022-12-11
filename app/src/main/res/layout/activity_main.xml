@@ -13,6 +13,10 @@
             name="mainViewModel"
             type="pl.nowak.bitly.MainViewModel" />
 
+        <variable
+            name="ecgViewModel"
+            type="pl.nowak.bitly.ecg.EcgChartViewModel" />
+
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -25,7 +29,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/wall_spacing"
             android:layout_marginTop="@dimen/wall_spacing"
-            android:layout_marginEnd="8dp"
+            android:layout_marginEnd="@dimen/wall_spacing"
             android:importantForAutofill="no"
             android:onClick="@{()-> mainViewModel.advertise()}"
             android:text="@string/btnScanView"
@@ -46,22 +50,30 @@
             app:layout_constraintStart_toEndOf="@+id/btAdvView"
             app:layout_constraintTop_toTopOf="@+id/btAdvView" />
 
-        <TextView
-            android:id="@+id/textConnectionStatus"
-            android:layout_width="match_parent"
+        <Button
+            android:id="@+id/btClean"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/wall_spacing"
-            android:layout_marginTop="@dimen/wall_spacing"
             android:layout_marginEnd="@dimen/wall_spacing"
-            android:gravity="center_horizontal|center_vertical"
             android:importantForAutofill="no"
-            android:singleLine="true"
-            android:text="@{mainViewModel.testStatus}"
-            android:textAlignment="center"
-            app:layout_constraintEnd_toEndOf="parent"
+            android:onClick="@{()-> ecgViewModel.dbClean()}"
+            android:text="Clean"
+            app:layout_constraintEnd_toStartOf="@id/btStats"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/btAdvView"
-            tools:text="@string/textConnectionStatus" />
+            app:layout_constraintTop_toBottomOf="@+id/btAdvView" />
+
+        <Button
+            android:id="@+id/btStats"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/wall_spacing"
+            android:layout_marginEnd="@dimen/wall_spacing"
+            android:importantForAutofill="no"
+            android:text="Stats"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/btClean"
+            app:layout_constraintTop_toTopOf="@id/btClean" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recycleChartList"
@@ -75,7 +87,7 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/textConnectionStatus"
+            app:layout_constraintTop_toBottomOf="@id/btClean"
             tools:itemCount="12"
             tools:listitem="@layout/ecg_chart_item" />
 

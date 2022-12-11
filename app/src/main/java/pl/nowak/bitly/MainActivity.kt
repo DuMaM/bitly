@@ -47,6 +47,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         binding.mainViewModel = viewModel       // same as in previous line
+        binding.ecgViewModel = viewModelCharts  // same as in previous line
         binding.lifecycleOwner = this           // allow data to update actions
         setContentView(binding.root)            // show this main activity
         Timber.i("binging set")
@@ -69,6 +70,7 @@ class MainActivity : AppCompatActivity() {
                 Timber.i("new data received")
             }
         }
+
         Timber.i("ecgCharts views are set and app is observing live data")
         Timber.i("init finished")
     }

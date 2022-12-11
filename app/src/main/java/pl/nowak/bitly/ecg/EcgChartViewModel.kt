@@ -17,14 +17,18 @@ class EcgChartViewModel(application: Application) : AndroidViewModel(application
     var chartsDataList: MutableLiveData<List<EcgChartData>>
     var size = 800
 
+    private val scope = CoroutineScope(Dispatchers.Main) // the scope of MyUIClass, uses Dispatchers.Main
+    private val database = getDatabase(application)
+    private val leadsRepository = EcgDataRepository(database, application)
+
+    @Volatile
+    private var isBlocked = false
+
+
     private fun <T> MutableLiveData<T>.forceRefresh() {
         this.postValue(value)
     }
 
-    private val scope = CoroutineScope(Dispatchers.Main) // the scope of MyUIClass, uses Dispatchers.Main
-
-    @Volatile
-    private var isBlocked = false
     private suspend fun triggerUpdateWithDelay(duration: Duration) {
         if (isBlocked) {
             return
@@ -42,22 +46,6 @@ class EcgChartViewModel(application: Application) : AndroidViewModel(application
             isBlocked = false
         }
     }
-
-//    private var mutex = Mutex()
-//    private suspend fun triggerUpdateWithDelay(duration: Duration) {
-//        if (mutex.isLocked) {
-//            return
-//        }
-//
-//        mutex.withLock {
-//            scope.launch {
-//                delay(duration)
-//                chartsDataList.forceRefresh()
-//                Timber.d("Graph update triggered")
-//            }
-//        }
-//    }
-
 
     init {
         // remove error
@@ -82,8 +70,11 @@ class EcgChartViewModel(application: Application) : AndroidViewModel(application
         Timber.i("created")
     }
 
-    private val database = getDatabase(application)
-    private val leadsRepository = EcgDataRepository(database, application)
+    fun dbClean() {
+        scope.async(Job() + Dispatchers.IO) {
+            database.leadDao.clear()
+        }
+    }
 
     init {
         viewModelScope.launch {
@@ -99,11 +90,11 @@ class EcgChartViewModel(application: Application) : AndroidViewModel(application
                         }
                     }
 
-                    triggerUpdateWithDelay(4.milliseconds)
+                    triggerUpdateWithDelay(2.milliseconds)
                 }
             }
         }
-        Timber.i("created")
+        //Timber.i("created")
     }
 
     override fun onCleared() {
