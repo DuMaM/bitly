@@ -43,8 +43,8 @@ class Metrics {
     private var mDelta: ULong = 0u
     private var mStart: ULong = 0u
 
-    private fun dumpStats() {
-        Timber.i("[local] got ${mData.writeLen} bytes (${mData.writeLen / (8u * 1024u)} KB) in ${mDelta / 1000u} ms at ${mData.writeRate / 1024u} kbps")
+    private fun dumpStats(writeLen: UInt = 0u) {
+        Timber.i("[local] got $writeLen bytes (in total ${mData.writeLen}b | ${mData.writeLen / (8u * 1024u)} KB) in ${mDelta / 1000u} ms at ${mData.writeRate / 1024u} kbps")
     }
 
     fun updateMetric(writeLen: UInt, berError: UInt) {
@@ -53,7 +53,7 @@ class Metrics {
         mData.writeLen += writeLen
         mData.errorCount += berError
         mData.writeRate = ((mData.writeLen.toULong() * 8u * 1000000u) / mDelta).toUInt()
-        dumpStats()
+        // dumpStats(writeLen)
     }
 
     fun start() {

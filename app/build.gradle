@@ -76,11 +76,13 @@ dependencies {
     implementation 'androidx.navigation:navigation-ui-ktx:2.5.2'
 
     // sync
+
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4"
 
     def room_version = "2.4.3"
     implementation "androidx.room:room-runtime:$room_version"
+    implementation "androidx.room:room-ktx:$room_version"
     annotationProcessor "androidx.room:room-compiler:$room_version"
     kapt "androidx.room:room-compiler:$room_version"     // To use Kotlin annotation processing tool (kapt)
 
@@ -88,7 +90,14 @@ dependencies {
     // -> logging
     implementation 'com.jakewharton.timber:timber:5.0.1'
     // -> graphs
-    implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
+    // https://github.com/AppDevNext/MPAndroidChart
+    implementation 'com.github.AppDevNext:MPAndroidChart:3.1.0.9'
+    // active fork of
+    // https://github.com/PhilJay/MPAndroidChart
+    // implementation 'com.github.PhilJay:MPAndroidChart:3.1.0'
+
+    // think of this
+    // https://github.com/AnyChart/AnyChart-Android/wiki/Chart-data-update#1-update-chart-data
 
     // dev
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'

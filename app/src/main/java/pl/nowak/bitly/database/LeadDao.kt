@@ -12,7 +12,7 @@ interface LeadDao {
     fun getLeads(): List<LeadEntry>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insert(vararg lead: LeadEntry)
+    fun insert(items: Iterable<LeadEntry>)
 
     @Query("SELECT * from leads_table WHERE id = :key")
     fun getEntry(key: Long): LeadEntry
