@@ -323,6 +323,7 @@ class BluetoothLeService : Service() {
                 if (characteristic.uuid.toString() == UUID_THROUGHPUT_MEASUREMENT_CHAR) {
                     mMetrics.updateMetric(value.size.toUInt(), 0u)
 
+                    setCommunication()
                     value.forEach { element ->
                         byteBuffer[pos] = element
                         pos++

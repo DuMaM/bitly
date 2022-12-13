@@ -99,6 +99,8 @@ dependencies {
     // think of this
     // https://github.com/AnyChart/AnyChart-Android/wiki/Chart-data-update#1-update-chart-data
 
+    implementation "com.androidplot:androidplot-core:1.5.10"
+
     // dev
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'

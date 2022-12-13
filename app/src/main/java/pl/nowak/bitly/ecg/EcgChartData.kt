@@ -27,7 +27,8 @@ data class EcgChartData(
 
     fun update(x: Float, y: Float) {
         // add to the end
-        val entry = Entry(x, y / 1000000)
+        // time in ms, value in mv
+        val entry = Entry(x / 1000, y / 1000000)
         if (lineDataRestricted.size > size) {
             lineDataRestricted.removeFirst()
         }

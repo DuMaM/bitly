@@ -94,7 +94,7 @@ class EcgChartViewModel(application: Application) : AndroidViewModel(application
                         }
                     }
 
-                    triggerUpdateWithDelay(2.milliseconds)
+                    triggerUpdateWithDelay(5.milliseconds)
                 }
             }
         }
