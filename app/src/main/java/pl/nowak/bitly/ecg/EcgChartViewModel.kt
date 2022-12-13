@@ -38,7 +38,7 @@ class EcgChartViewModel(application: Application) : AndroidViewModel(application
         scope.launch(Job()) {
             delay(duration)
             chartsDataList.forceRefresh()
-            Timber.d("Graph update triggered")
+            //Timber.d("Graph update triggered")
 //            chartsDataList.value?.forEach {
 //                Timber.d(it.lineDataRestricted.toArray().contentToString())
 //            }
@@ -73,6 +73,10 @@ class EcgChartViewModel(application: Application) : AndroidViewModel(application
     fun dbClean() {
         scope.async(Job() + Dispatchers.IO) {
             database.leadDao.clear()
+            chartsDataList.value?.forEach {
+                it.clean()
+            }
+            chartsDataList.forceRefresh()
         }
     }
 
@@ -94,7 +98,7 @@ class EcgChartViewModel(application: Application) : AndroidViewModel(application
                 }
             }
         }
-        //Timber.i("created")
+        Timber.i("created")
     }
 
     override fun onCleared() {

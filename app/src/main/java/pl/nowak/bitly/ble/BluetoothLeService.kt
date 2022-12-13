@@ -207,15 +207,13 @@ class BluetoothLeService : Service() {
 
         fun ByteArray.getUIntAt(idx: Int, size: Int = 4, isBigEndian: Boolean = true): UInt {
             return if (isBigEndian) {
-                ((this[idx].toUInt() and 0xFFu) shl 24) or
-                        ((this[idx + 1].toUInt() and 0xFFu) shl 16) or
-                        ((this[idx + 2].toUInt() and 0xFFu) shl 8) or
-                        (this[idx + 3].toUInt() and 0xFFu)
-            } else {
-                ((this[idx + 3].toUInt() and 0xFFu) shl 24) or
-                        ((this[idx + 2].toUInt() and 0xFFu) shl 16) or
+                ((this[idx].toUInt() and 0xFFu) shl 16) or
                         ((this[idx + 1].toUInt() and 0xFFu) shl 8) or
-                        (this[idx].toUInt() and 0xFFu)
+                        ((this[idx + 2].toUInt() and 0xFFu) shl 0)
+            } else {
+                ((this[idx + 2].toUInt() and 0xFFu) shl 16) or
+                        ((this[idx + 1].toUInt() and 0xFFu) shl 8) or
+                        ((this[idx + 0].toUInt() and 0xFFu) shl 0)
             }
         }
 
@@ -334,7 +332,7 @@ class BluetoothLeService : Service() {
                             byteBuffer[pos] = 0
 
                             // save data
-                            dataBuffer[ecgPackPos] = byteBuffer.getUIntAt(0, byteBuffer.size, false)
+                            dataBuffer[ecgPackPos] = byteBuffer.getUIntAt(0, byteBuffer.size, true)
 
                             // clean up after operation
                             pos = 0
@@ -344,7 +342,6 @@ class BluetoothLeService : Service() {
                         }
 
                         if (ecgPackPos == dataBuffer.size) {
-                            //Timber.v(dataBuffer.contentToString())
                             ecgPackPos = 0
 
                             trySendBlocking(dataBuffer)
@@ -399,11 +396,14 @@ class BluetoothLeService : Service() {
 
                 Timber.d("Device tried to read descriptor: " + descriptor.uuid)
                 Timber.d("Value: " + Arrays.toString(descriptor.value))
+
                 if (offset != 0) {
                     mGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_INVALID_OFFSET, offset,  /* value (optional) */null)
                     return
                 }
                 mGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, descriptor.value)
+                mMetrics.mData.clean()
+                setCommunication()
             }
 
             @RequiresPermission(allOf = [BLUETOOTH_CONNECT])
@@ -438,7 +438,6 @@ class BluetoothLeService : Service() {
                         }
 
                         setCommunication()
-
                         mMetrics.reset()
                         when (testType) {
                             BleTestType.BT_TEST_TYPE_RESET.ordinal -> {

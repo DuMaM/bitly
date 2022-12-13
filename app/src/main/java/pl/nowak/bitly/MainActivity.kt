@@ -67,7 +67,7 @@ class MainActivity : AppCompatActivity() {
         viewModelCharts.chartsDataList.observe(this) {
             it?.let {
                 adapter.submitList(it.toMutableList())
-                Timber.i("new data received")
+                // Timber.i("new data received")
             }
         }
 

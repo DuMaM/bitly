@@ -58,8 +58,8 @@ class EcgChart : LineChart {
         xAxis.labelRotationAngle = 0f
         xAxis.isEnabled = true
         xAxis.setCenterAxisLabels(true)
-        xAxis.setDrawAxisLine(false)
-        xAxis.setDrawGridLines(true)
+        xAxis.setDrawAxisLine(true)
+        xAxis.setDrawGridLines(false)
         xAxis.position = XAxis.XAxisPosition.TOP_INSIDE
 
         // set data settings
@@ -107,7 +107,6 @@ class EcgChart : LineChart {
         // chart.moveViewTo(data.getXValCount()-7, 55f,
         // AxisDependency.LEFT);
         invalidate()
-
     }
 
     private var numberOfData: Int = 0

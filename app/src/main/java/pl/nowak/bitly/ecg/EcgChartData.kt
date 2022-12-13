@@ -13,6 +13,10 @@ data class EcgChartData(
     @Volatile
     var newVal: Boolean = false
 
+    fun clean() {
+        lineDataRestricted.clear()
+    }
+
     fun getLastTimestamp(): Float {
         return if (lineDataRestricted.size > 0) {
             return lineDataRestricted.last().x
