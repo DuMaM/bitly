@@ -50,8 +50,10 @@ class EcgChart : LineChart {
         yAxis.setDrawGridLines(true)
         yAxis.setDrawGridLinesBehindData(false)
         yAxis.gridColor = holeDarkBlue
-        yAxis.setAxisMaxValue(200f)
-        yAxis.setAxisMinValue(-200f)
+        yAxis.axisMinimum = -200f
+        yAxis.axisMaximum = 200f
+        yAxis.isGranularityEnabled = true
+        yAxis.granularity = 0.00001f
 
         // mode for X axis
         xAxis.setDrawLabels(false)
@@ -60,7 +62,9 @@ class EcgChart : LineChart {
         xAxis.setCenterAxisLabels(true)
         xAxis.setDrawAxisLine(true)
         xAxis.setDrawGridLines(false)
-        xAxis.position = XAxis.XAxisPosition.TOP_INSIDE
+        xAxis.position = XAxis.XAxisPosition.BOTTOM
+        xAxis.isGranularityEnabled = true
+        xAxis.granularity = 0.00001f
 
         // set data settings
         var lineSet = LineDataSet(emptyList<Entry>().toMutableList(), "data")
