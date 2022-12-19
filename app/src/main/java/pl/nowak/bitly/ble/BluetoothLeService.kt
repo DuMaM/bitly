@@ -346,6 +346,7 @@ class BluetoothLeService : Service() {
                             ecgPackPos = 0
 
                             trySendBlocking(dataBuffer)
+                            //Timber.v("Got data " + dataBuffer.contentToString())
                         }
                     }
 
