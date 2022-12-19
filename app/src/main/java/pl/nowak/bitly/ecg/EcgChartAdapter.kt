@@ -28,13 +28,7 @@ class EcgChartListAdapter : ListAdapter<EcgChartData, EcgChartListAdapter.EcgCha
 
         fun bind(item: EcgChartData) {
             ecgLabel.text = item.label
-            if (item.lineDataRestricted.isEmpty()) {
-                if (ecgChart.data.entryCount > 0) {
-                    ecgChart.data.clearValues()
-                }
-            }
-            ecgChart.addEntries(item.lineDataRestricted)
-            item.newVal = false
+            ecgChart.addEntries(item.load())
         }
 
         companion object {

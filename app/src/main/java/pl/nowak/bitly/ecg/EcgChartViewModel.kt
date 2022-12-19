@@ -35,14 +35,9 @@ class EcgChartViewModel(application: Application) : AndroidViewModel(application
         }
 
         isBlocked = true
-        scope.launch(Job()) {
+        scope.launch(Job() + Dispatchers.Default) {
             delay(duration)
             chartsDataList.forceRefresh()
-            //Timber.d("Graph update triggered")
-//            chartsDataList.value?.forEach {
-//                Timber.d(it.lineDataRestricted.toArray().contentToString())
-//            }
-
             isBlocked = false
         }
     }
@@ -81,17 +76,15 @@ class EcgChartViewModel(application: Application) : AndroidViewModel(application
     }
 
     init {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Default) {
             while (true) {
                 leadsRepository.getData()?.collect { input ->
                     input.data.forEach {
                         chartsDataList.value?.get(it.lead)?.update(it.x, it.y)
                     }
 
-                    launch(Job()) {
-                        withContext(Dispatchers.IO) {
-                            database.leadDao.insert(input.data)
-                        }
+                    launch(Job() + Dispatchers.IO) {
+                        database.leadDao.insert(input.data)
                     }
 
                     triggerUpdateWithDelay(5.milliseconds)

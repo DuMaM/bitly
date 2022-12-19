@@ -28,6 +28,9 @@ class EcgChart : LineChart {
     }
 
     private val setIndex = 0
+    private val holoBlue = Color.rgb(51, 181, 229)
+    private val holeDarkBlue = Color.rgb(103, 134, 147)
+    private var numberOfData: Int = 0
 
     fun chartSettings() {
 
@@ -84,14 +87,51 @@ class EcgChart : LineChart {
 
     }
 
-    fun addEntries(inData: ArrayDeque<Entry>) {
-        inData.forEach {
-            data.addEntry(it, setIndex)
-        }
+    var X_COUNT_MAX = 12000
+    fun cleanUpOldEntries() {
+        var set = data.dataSets[setIndex]
+        var cnt = 0
 
-        if (inData.size > 1) {
-            xAxis.axisMaximum = inData.last().x
-            xAxis.axisMinimum = inData.first().x
+        if (set.entryCount >= X_COUNT_MAX) {
+            while (set.entryCount >= X_COUNT_MAX) {
+                set.removeFirst()
+                cnt++
+            }
+            for (i in 0..set.entryCount - 1) {
+                var entryToChange = set.getEntryForIndex(i)
+                entryToChange.x = entryToChange.x - cnt
+            }
+        }
+    }
+
+
+    private fun moveVisibleWindow(min: Float, max: Float) {
+        val x: XAxis = xAxis
+        if (min > 0) {
+            x.axisMinimum = min
+        }
+        x.axisMaximum = max
+    }
+
+    fun addEntries(inData: List<Entry>?) {
+        if (inData == null) {
+            data.dataSets[setIndex].clear()
+        } else {
+            if (inData.isEmpty()) {
+                return
+            }
+
+
+            inData.forEach {
+                data.addEntry(it, setIndex)
+            }
+            moveVisibleWindow(data.xMax - 3f, data.xMax)
+
+            //  cleanUpOldEntries()
+//        if (inData.size > 1) {
+//            xAxis.axisMaximum = inData.last().x
+//            xAxis.axisMinimum = inData.first().x
+//        }
         }
 
         // notify data has been updates
@@ -105,37 +145,11 @@ class EcgChart : LineChart {
         // ecgChart.setVisibleYRange(30, AxisDependency.LEFT);
 
         // move to the latest entry
-        //moveViewToX(item.getLastTimestamp())
+        //moveViewToX(data.xMax - 500f)
 
         // this automatically refreshes the chart (calls invalidate())
         // chart.moveViewTo(data.getXValCount()-7, 55f,
         // AxisDependency.LEFT);
         invalidate()
     }
-
-    private var numberOfData: Int = 0
-    private val holoBlue = Color.rgb(51, 181, 229)
-    private val holeDarkBlue = Color.rgb(103, 134, 147)
-
-//    fun defaultDataSettings(vl: LineDataSet): LineDataSet {
-//        // draw only space without line and dots
-//        vl.setDrawFilled(true)
-//        vl.setDrawValues(false)
-//        vl.setDrawCircleHole(false)
-//        vl.setDrawCircles(false)
-//        vl.lineWidth = 0f
-//
-//        vl.fillColor = holoBlue
-//        vl.fillAlpha = holoBlue
-//        vl.color = holoBlue
-//        return vl
-//    }
-//
-//    fun defaultAxisSettings() {
-//
-//        axisLeft.axisMinimum = -1f
-//        axisLeft.axisMaximum = 10f
-//
-//        animateX(1800, Easing.EaseInExpo)
-//    }
 }
