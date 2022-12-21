@@ -1,5 +1,6 @@
 package pl.nowak.bitly.ecg
 
+import CircularArray
 import android.graphics.Canvas
 import com.androidplot.Plot
 import com.androidplot.PlotListener
@@ -7,6 +8,7 @@ import com.androidplot.SeriesRegistry
 import com.androidplot.ui.Formatter
 import com.androidplot.ui.SeriesBundle
 import com.androidplot.ui.SeriesRenderer
+import com.androidplot.xy.OrderedXYSeries
 import com.androidplot.xy.XYSeries
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
@@ -17,7 +19,7 @@ data class EcgChartData_Test(
     val label: String,
     val id: Int,
     val size: Int
-) : XYSeries, PlotListener {
+) : XYSeries, PlotListener, OrderedXYSeries {
 
     class SignalStats {
         var n = 0
@@ -59,7 +61,7 @@ data class EcgChartData_Test(
 
     var stats: SignalStats = SignalStats()
 
-    private var lineDataRestricted: ArrayDeque<Entry> = ArrayDeque()
+    private var lineDataRestricted: CircularArray<Entry> = CircularArray(size)
     private var seriesCounter = 0
     private val seriesResolutionCounter = 16777215
     private var cnt = 0
@@ -71,7 +73,7 @@ data class EcgChartData_Test(
     fun clean() {
         runBlocking {
             mutex.withLock {
-                lineDataRestricted.clear()
+                lineDataRestricted.clean()
                 seriesCounter = 0
                 stats.clean()
                 cnt = 0
@@ -83,9 +85,9 @@ data class EcgChartData_Test(
     suspend fun update(x: Float, y: Float) {
         mutex.withLock {
 
-            if (cnt % 4 != 0) {
-                return
-            }
+//            if (cnt % 4 != 0) {
+//                return
+//            }
 
             var x_sec = (x + seriesCounter * seriesResolutionCounter) / 1000000f
             val y_scaled = y / (1000000f)
@@ -96,10 +98,10 @@ data class EcgChartData_Test(
             // add to the end
             // time in ms, value in mv
             val entry = Entry(x_sec, y_scaled)
-            if (lineDataRestricted.size > size) {
-                val removed = lineDataRestricted.removeFirst()
-                stats.remove_variable(removed.y)
-            }
+//            if (lineDataRestricted.size > size) {
+//                val removed = lineDataRestricted.removeFirst()
+//                stats.remove_variable(removed.y)
+//            }
             lineDataRestricted.add(entry)
             newVal = true
             cnt++
@@ -124,6 +126,22 @@ data class EcgChartData_Test(
 
     override fun getY(p0: Int): Number {
         return lineDataRestricted[p0].y
+    }
+
+//    override fun minMax(): RectRegion {
+//        if (lineDataRestricted.size == 0)
+//            return RectRegion()
+//
+//        val min = lineDataRestricted[lineDataRestricted.tail]
+//        val minCords = XYCoords(min.x, min.y)
+//        val max = lineDataRestricted[lineDataRestricted.head]
+//        val maxCords = XYCoords(min.x, min.y)
+//
+//        return RectRegion(minCords, maxCords)
+//    }
+
+    override fun getXOrder(): OrderedXYSeries.XOrder {
+        return com.androidplot.xy.OrderedXYSeries.XOrder.ASCENDING
     }
 
     override fun onBeforeDraw(

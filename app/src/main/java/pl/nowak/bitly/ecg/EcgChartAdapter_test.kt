@@ -10,7 +10,6 @@ import com.androidplot.Plot
 import com.androidplot.util.Redrawer
 import com.androidplot.xy.BoundaryMode
 import com.androidplot.xy.LineAndPointFormatter
-import com.androidplot.xy.PanZoom
 import com.androidplot.xy.XYPlot
 import pl.nowak.bitly.databinding.EcgChartItemTestBinding
 
@@ -50,14 +49,15 @@ class EcgChartListAdapterTest : ListAdapter<EcgChartData_Test, EcgChartListAdapt
 
                 val plot: XYPlot = binding.ecgChart
                 plot.renderMode = Plot.RenderMode.USE_BACKGROUND_THREAD
-                plot.setRangeBoundaries(-200, 200, BoundaryMode.AUTO)
-                //plot.setDomainBoundaries(0, 2000, BoundaryMode.FIXED)
+
+                //plot.setRangeBoundaries(-200, 200, BoundaryMode.AUTO)
+                plot.setDomainBoundaries(0, 2000, BoundaryMode.AUTO)
                 plot.legend.isVisible = false
 
                 // reduce the number of range labels
                 plot.linesPerRangeLabel = 3
                 val redrawer = Redrawer(plot, 10f, true)
-                PanZoom.attach(plot)
+                // PanZoom.attach(plot)
 
                 return EcgChartViewTestHolder(binding, redrawer)
             }
