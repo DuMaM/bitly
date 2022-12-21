@@ -10,12 +10,11 @@ import pl.nowak.bitly.database.getDatabase
 import pl.nowak.bitly.repository.EcgDataRepository
 import timber.log.Timber
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.milliseconds
 
 @SuppressLint("MissingPermission")
 class EcgChartViewModel(application: Application) : AndroidViewModel(application) {
-    var chartsDataList: MutableLiveData<List<EcgChartData>>
-    var size = 800
+    var chartsDataList: MutableLiveData<List<EcgChartData_Test>>
+    private var size = 2000
 
     private val scope = CoroutineScope(Dispatchers.Main) // the scope of MyUIClass, uses Dispatchers.Main
     private val database = getDatabase(application)
@@ -47,18 +46,18 @@ class EcgChartViewModel(application: Application) : AndroidViewModel(application
         // Utils NOT INITIALIZED. You need to call Utils.init(...) at least once before calling Utils.convertDpToPixel(...). Otherwise conversion does not take place.
         chartsDataList = MutableLiveData(
             mutableListOf(
-                EcgChartData("Lead V1", 8, size),
-                EcgChartData("Lead V2", 4, size),
-                EcgChartData("Lead V3", 5, size),
-                EcgChartData("Lead V4", 6, size),
-                EcgChartData("Lead V5", 7, size),
-                EcgChartData("Lead V6", 1, size),
-                EcgChartData("Lead I", 2, size),
-                EcgChartData("Lead II", 3, size),
-                EcgChartData("Lead III", 9, size),
-                EcgChartData("Lead aVR", 10, size),
-                EcgChartData("Lead aVL", 11, size),
-                EcgChartData("Lead aVF", 12, size)
+                EcgChartData_Test("Lead V1", 8, size),
+                EcgChartData_Test("Lead V2", 4, size),
+                EcgChartData_Test("Lead V3", 5, size),
+                EcgChartData_Test("Lead V4", 6, size),
+                EcgChartData_Test("Lead V5", 7, size),
+                EcgChartData_Test("Lead V6", 1, size),
+                EcgChartData_Test("Lead I", 2, size),
+                EcgChartData_Test("Lead II", 3, size),
+                EcgChartData_Test("Lead III", 9, size),
+                EcgChartData_Test("Lead aVR", 10, size),
+                EcgChartData_Test("Lead aVL", 11, size),
+                EcgChartData_Test("Lead aVF", 12, size)
             )
         )
 
@@ -71,7 +70,7 @@ class EcgChartViewModel(application: Application) : AndroidViewModel(application
             chartsDataList.value?.forEach {
                 it.clean()
             }
-            chartsDataList.forceRefresh()
+            //chartsDataList.forceRefresh()
         }
     }
 
@@ -87,7 +86,7 @@ class EcgChartViewModel(application: Application) : AndroidViewModel(application
                         database.leadDao.insert(input.data)
                     }
 
-                    triggerUpdateWithDelay(5.milliseconds)
+                    //triggerUpdateWithDelay(5.milliseconds)
                 }
             }
         }
