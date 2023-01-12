@@ -21,6 +21,66 @@
         <item name="windowNoTitle">true</item>
     </style>
 
+    <style name="ecg">
+        <item name="titleTextSize">20sp</item>
+        <item name="rangeTitleTextSize">10sp</item>
+        <item name="domainTitleTextSize">10sp</item>
+        <item name="graphMarginTop">10dp</item>
+        <item name="graphMarginBottom">15dp</item>
+        <item name="graphMarginLeft">15dp</item>
+        <item name="graphMarginRight">10dp</item>
+        <item name="domainLineThickness">1dp</item>
+        <item name="rangeLineThickness">1dp</item>
+        <item name="domainOriginLineThickness">2dp</item>
+        <item name="rangeOriginLineThickness">2dp</item>
+        <item name="legendTextSize">15sp</item>
+        <item name="legendIconHeight">15dp</item>
+        <item name="legendIconWidth">15dp</item>
+        <item name="legendHeight">25dp</item>
+        <item name="legendAnchor">right_bottom</item>
+        <item name="borderColor">@color/ap_transparent</item>
+        <item name="gridInsetTop">1dp</item>
+        <item name="gridInsetBottom">20dp</item>
+        <item name="gridInsetLeft">25dp</item>
+        <item name="gridInsetRight">1dp</item>
+        <item name="lineLabels">left|bottom</item>
+        <item name="lineLabelInsetTop">1dp</item>
+        <item name="lineLabelInsetBottom">10dp</item>
+        <item name="lineLabelInsetLeft">20dp</item>
+        <item name="lineLabelInsetRight">1dp</item>
+        <item name="lineLabelTextSizeTop">10sp</item>
+        <item name="lineLabelTextSizeBottom">10sp</item>
+        <item name="lineLabelTextSizeLeft">10sp</item>
+        <item name="lineLabelTextSizeRight">10sp</item>
+        <item name="lineLabelAlignLeft">right</item>
+        <item name="lineLabelAlignRight">left</item>
+        <item name="lineLabelAlignTop">left</item>
+        <item name="lineLabelAlignBottom">right</item>
+        <item name="lineLabelRotationBottom">-45</item>
+        <item name="lineLabelRotationTop">-45</item>
+        <item name="lineExtensionLeft">3dp</item>
+        <item name="lineExtensionBottom">3dp</item>
+    </style>
+
+    <style name="ecg.Light">
+        <item name="android:background">@color/off_white</item>
+        <item name="backgroundColor">@color/off_white</item>
+        <item name="graphBackgroundColor">@color/off_white</item>
+        <item name="gridBackgroundColor">@color/ap_white</item>
+        <item name="domainLineColor">@color/ap_gray</item>
+        <item name="rangeLineColor">@color/ap_gray</item>
+        <item name="lineLabelTextColorTop">@color/ap_charcoal</item>
+        <item name="lineLabelTextColorBottom">@color/ap_charcoal</item>
+        <item name="lineLabelTextColorLeft">@color/ap_charcoal</item>
+        <item name="lineLabelTextColorRight">@color/ap_charcoal</item>
+        <item name="domainOriginLineColor">@color/ap_charcoal</item>
+        <item name="rangeOriginLineColor">@color/ap_charcoal</item>
+        <item name="titleTextColor">@color/ap_black</item>
+        <item name="domainTitleTextColor">@color/ap_black</item>
+        <item name="rangeTitleTextColor">@color/ap_black</item>
+        <item name="legendTextColor">@color/ap_black</item>
+    </style>
+
     <style name="Theme.Bitly.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
 
     <style name="Theme.Bitly.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
