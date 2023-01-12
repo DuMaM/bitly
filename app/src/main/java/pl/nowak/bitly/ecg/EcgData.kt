@@ -2,15 +2,12 @@ package pl.nowak.bitly.ecg
 
 import pl.nowak.bitly.LeadName
 import pl.nowak.bitly.database.LeadEntry
+import timber.log.Timber
 
 data class EcgData(
     var status: UInt,
     var data: List<LeadEntry>
 ) {
-    val LOFF_STATP_MASK = 0xFF000
-    val LOFF_STATN_MASK = 0x00FF0
-    val GPIO_MASK = 0x0000F
-
     @ExperimentalUnsignedTypes
     companion object {
         fun loadData(data: UIntArray): EcgData {
@@ -37,7 +34,11 @@ data class EcgData(
 
         @ExperimentalUnsignedTypes
         fun UInt.convToI32(): Int {
-            return ((this shl 8).toInt()) shl 8
+            return if (this >= 0x800000u) {
+                (0xFF000000u or this).toInt()
+            } else {
+                this.toInt()
+            }
         }
 
         @ExperimentalUnsignedTypes
