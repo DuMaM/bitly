@@ -14,7 +14,7 @@ import kotlin.time.Duration
 @SuppressLint("MissingPermission")
 class EcgChartViewModel(application: Application) : AndroidViewModel(application) {
     var chartsDataList: MutableLiveData<List<EcgChartData_Test>>
-    private var size = 2000
+    private var size = 1000
 
     private val scope = CoroutineScope(Dispatchers.Main) // the scope of MyUIClass, uses Dispatchers.Main
     private val database = getDatabase(application)
@@ -70,7 +70,6 @@ class EcgChartViewModel(application: Application) : AndroidViewModel(application
             chartsDataList.value?.forEach {
                 it.clean()
             }
-            //chartsDataList.forceRefresh()
         }
     }
 
@@ -82,11 +81,10 @@ class EcgChartViewModel(application: Application) : AndroidViewModel(application
                         chartsDataList.value?.get(it.lead)?.update(it.x, it.y)
                     }
 
-                    launch(Job() + Dispatchers.IO) {
-                        database.leadDao.insert(input.data)
-                    }
+                    //launch(Job() + Dispatchers.IO) {
+                    //    database.leadDao.insert(input.data)
+                    //}
 
-                    //triggerUpdateWithDelay(5.milliseconds)
                 }
             }
         }
