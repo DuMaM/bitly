@@ -25,10 +25,8 @@ class EcgChartListAdapterTest : ListAdapter<EcgChartData_Test, EcgChartListAdapt
         return EcgChartViewTestHolder.from(parent)
     }
 
-    class EcgChartViewTestHolder private constructor(binding: EcgChartItemTestBinding, val redrawer: Redrawer) : RecyclerView.ViewHolder(
-        binding
-            .root
-    ) {
+    class EcgChartViewTestHolder private constructor(binding: EcgChartItemTestBinding, val redrawer: Redrawer) :
+        RecyclerView.ViewHolder(binding.root) {
         private val ecgLabel: TextView = binding.ecgLineLabel
         private val ecgChart: XYPlot = binding.ecgChart
 
@@ -51,7 +49,7 @@ class EcgChartListAdapterTest : ListAdapter<EcgChartData_Test, EcgChartListAdapt
                 val plot: XYPlot = binding.ecgChart
                 plot.renderMode = Plot.RenderMode.USE_BACKGROUND_THREAD
                 //plot.setRangeBoundaries(-200, 200, BoundaryMode.AUTO)
-                plot.setDomainBoundaries(0, 2000, BoundaryMode.AUTO)
+                plot.setDomainBoundaries(0, 1, BoundaryMode.AUTO)
                 plot.legend.isVisible = false
 
                 // reduce the number of range labels

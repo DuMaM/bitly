@@ -27,7 +27,7 @@ data class EcgChartData_Test(
     private var seriesCounter = 0
     private val seriesResolutionCounter = 16777215
     private var cnt = 0
-    val mutex = Mutex()
+    private val mutex = Mutex()
 
     @Volatile
     var newVal: Boolean = false
@@ -62,8 +62,6 @@ data class EcgChartData_Test(
             lineDataRestricted.add(entry)
             newVal = true
             cnt++
-
-            // Timber.i("For: ${label}:Variance is ${stats.get_mean() * 100000} ")
         }
     }
 
@@ -84,20 +82,8 @@ data class EcgChartData_Test(
         return lineDataRestricted[p0].y
     }
 
-//    override fun minMax(): RectRegion {
-//        if (lineDataRestricted.size == 0)
-//            return RectRegion()
-//
-//        val min = lineDataRestricted[lineDataRestricted.tail]
-//        val minCords = XYCoords(min.x, min.y)
-//        val max = lineDataRestricted[lineDataRestricted.head]
-//        val maxCords = XYCoords(min.x, min.y)
-//
-//        return RectRegion(minCords, maxCords)
-//    }
-
     override fun getXOrder(): OrderedXYSeries.XOrder {
-        return com.androidplot.xy.OrderedXYSeries.XOrder.ASCENDING
+        return OrderedXYSeries.XOrder.ASCENDING
     }
 
     override fun onBeforeDraw(

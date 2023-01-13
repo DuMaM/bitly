@@ -11,9 +11,6 @@ data class EcgData(
     companion object {
         fun loadData(data: UIntArray): EcgData {
 
-            //val tmp = data.map { it -> it.convToI32() / 1000 }
-            //Timber.i(tmp.toString())
-
             val timestamp = data[0].toFloat()
             // here is why it was implemented this way
             // https://hackernoon.com/squeezing-performance-from-sqlite-insertions-with-room-d769512f8330
