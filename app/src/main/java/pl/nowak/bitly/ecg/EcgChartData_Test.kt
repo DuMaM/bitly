@@ -1,6 +1,6 @@
 package pl.nowak.bitly.ecg
 
-import CircularArray
+import CustomCircularArray
 import android.graphics.Canvas
 import com.androidplot.Plot
 import com.androidplot.PlotListener
@@ -23,9 +23,7 @@ data class EcgChartData_Test(
 
     data class Entry(val x: Float, val y: Float)
 
-    var stats: SignalStats = SignalStats()
-
-    private var lineDataRestricted: CircularArray<Entry> = CircularArray(size)
+    private var lineDataRestricted: CustomCircularArray<Entry> = CustomCircularArray(size)
     private var seriesCounter = 0
     private val seriesResolutionCounter = 16777215
     private var cnt = 0

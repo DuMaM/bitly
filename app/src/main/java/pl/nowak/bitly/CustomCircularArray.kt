@@ -1,6 +1,6 @@
 import java.util.concurrent.atomic.AtomicInteger
 
-class CircularArray<T> : Iterable<T>, Cloneable {
+class CustomCircularArray<T> : Iterable<T>, Cloneable {
 
     /**
      * Creates a new instance of the array with the given size.
@@ -13,10 +13,10 @@ class CircularArray<T> : Iterable<T>, Cloneable {
     /**
      * Creates a new instance of the array as a copy.
      */
-    constructor(circularArray: CircularArray<T>) {
-        this.arr = circularArray.arr.copyOf()
-        this._size = circularArray._size
-        this._tail = circularArray._tail
+    constructor(customCircularArray: CustomCircularArray<T>) {
+        this.arr = customCircularArray.arr.copyOf()
+        this._size = customCircularArray._size
+        this._tail = customCircularArray._tail
     }
 
     private val arr: Array<Any?>
@@ -67,7 +67,7 @@ class CircularArray<T> : Iterable<T>, Cloneable {
     @Suppress("UNCHECKED_CAST")
     fun toList(): List<T> = iterator().asSequence().toList()
 
-    public override fun clone(): CircularArray<T> = CircularArray(this)
+    public override fun clone(): CustomCircularArray<T> = CustomCircularArray(this)
 
     override fun iterator(): Iterator<T> = object : Iterator<T> {
         private val index: AtomicInteger = AtomicInteger(0)
