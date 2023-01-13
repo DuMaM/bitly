@@ -48,6 +48,10 @@ class EcgDataRepository(private val database: LeadDatabase, val application: App
         return mBluetoothLeService.mMetrics.getStats()
     }
 
+    fun runClean() {
+        return mBluetoothLeService.mMetrics.clean()
+    }
+
     @RequiresPermission(allOf = ["android.permission.BLUETOOTH_CONNECT", "android.permission.BLUETOOTH_ADVERTISE"])
     fun advertise() {
         if (this::mBluetoothLeService.isInitialized) {
@@ -79,7 +83,7 @@ class EcgDataRepository(private val database: LeadDatabase, val application: App
             return null
         }
 
-        var ecgData: Flow<EcgData> = withContext(Dispatchers.IO) {
+        val ecgData: Flow<EcgData> = withContext(Dispatchers.IO) {
             mBluetoothLeService.mBluetoothServerFlow().map { data -> EcgData.loadData(data) }
         }
         return ecgData

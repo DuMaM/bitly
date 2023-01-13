@@ -37,7 +37,7 @@ class EcgChartListAdapterTest : ListAdapter<EcgChartData_Test, EcgChartListAdapt
 
             if (ecgChart.registry.isEmpty) {
                 // add data series only once
-                val dataFormat = LineAndPointFormatter(Color.RED, Color.RED, null, null)
+                val dataFormat = LineAndPointFormatter(Color.RED, null, null, null)
                 ecgChart.addSeries(item, dataFormat)
                 ecgChart.redraw()
             }
@@ -50,7 +50,6 @@ class EcgChartListAdapterTest : ListAdapter<EcgChartData_Test, EcgChartListAdapt
 
                 val plot: XYPlot = binding.ecgChart
                 plot.renderMode = Plot.RenderMode.USE_BACKGROUND_THREAD
-
                 //plot.setRangeBoundaries(-200, 200, BoundaryMode.AUTO)
                 plot.setDomainBoundaries(0, 2000, BoundaryMode.AUTO)
                 plot.legend.isVisible = false

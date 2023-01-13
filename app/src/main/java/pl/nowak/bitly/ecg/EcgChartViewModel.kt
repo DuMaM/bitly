@@ -65,11 +65,12 @@ class EcgChartViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun dbClean() {
-        scope.async(Job() + Dispatchers.IO) {
+        var deferred = scope.async(Job() + Dispatchers.IO) {
             database.leadDao.clear()
             chartsDataList.value?.forEach {
                 it.clean()
             }
+            leadsRepository.runClean()
         }
     }
 

@@ -489,6 +489,7 @@ class BluetoothLeService : Service() {
         }
 
         mGattServer = mBluetoothManager.openGattServer(application.applicationContext, callback)
+        mGattServer.clearServices()
         mGattServer.addService(mBluetoothGattService)
 
         /*
@@ -516,7 +517,7 @@ class BluetoothLeService : Service() {
 
     @RequiresPermission(allOf = [BLUETOOTH_CONNECT])
     fun disconnectFromDevices() {
-        Timber.d("Disconnecting devices...")
+        Timber.d("Disconnecting devices ${mBluetoothDevices.size}...")
         for (device in mBluetoothDevices) {
             Timber.d("Devices: " + device.address + " " + device.name)
             if (this@BluetoothLeService::mGattServer.isInitialized) {
