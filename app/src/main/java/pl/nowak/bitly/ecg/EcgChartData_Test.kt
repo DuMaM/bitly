@@ -48,7 +48,7 @@ data class EcgChartData_Test(
 
             var x_sec = (x + seriesCounter * seriesResolutionCounter) / 1000000f
             val y_scaled = y / (1000000f)
-            if (lineDataRestricted.size > 0 && x_sec < lineDataRestricted.last().x) {
+            if (lineDataRestricted.size > 0 && cnt > 0 && x_sec < lineDataRestricted.last().x) {
                 seriesCounter++
                 x_sec = (x + seriesCounter * seriesResolutionCounter) / 1000000f
             }

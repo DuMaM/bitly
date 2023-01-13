@@ -39,6 +39,7 @@ class EcgChartListAdapterTest : ListAdapter<EcgChartData_Test, EcgChartListAdapt
                 // add data series only once
                 val dataFormat = LineAndPointFormatter(Color.RED, Color.RED, null, null)
                 ecgChart.addSeries(item, dataFormat)
+                ecgChart.redraw()
             }
         }
 

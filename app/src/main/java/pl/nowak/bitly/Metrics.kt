@@ -1,6 +1,7 @@
 package pl.nowak.bitly
 
 import timber.log.Timber
+import kotlin.math.sqrt
 
 
 enum class BleTestType {
@@ -43,44 +44,56 @@ class Metrics {
     private var mDelta: ULong = 0u
     private var mStart: ULong = 0u
 
-    private var n = 0
-    private var K = 0f
-    private var Ex = 0f
-    private var Ex2 = 0f
+    private var m_n = 0
+    private var m_oldM = 0f
+    private var m_newM = 0f
+    private var m_newS = 0f
+    private var m_oldS = 0f
 
     private fun addVariable(x: Float) {
-        if (n == 0)
-            K = x
-        n += 1
-        Ex += x - K
-        Ex2 += (x - K) * (x - K)
-    }
+        m_n++
 
-    fun removeVariable(x: Float) {
-        n -= 1
-        Ex -= x - K
-        Ex2 -= (x - K) * (x - K)
+        // See Knuth TAOCP vol 2, 3rd edition, page 232
+        if (m_n == 1) {
+            m_oldM = x
+            m_newM = x
+            m_oldS = 0.0f
+        } else {
+            m_newM = m_oldM + (x - m_oldM) / m_n
+            m_newS = m_oldS + (x - m_oldM) * (x - m_newM)
+
+            // set up for next iteration
+            m_oldM = m_newM
+            m_oldS = m_newS
+        }
     }
 
     fun getMean(): Float {
-        return K + Ex / n
+        return if (m_n > 0) m_newM else 0.0f
     }
 
     fun getVariance(): Float {
-        return (Ex2 - Ex * Ex / n) / (n - 1)
+        return if (m_n > 1) m_newS / (m_n - 1) else 0.0f
     }
 
-    private fun clean() {
-        K = 0f
-        Ex = 0f
-        Ex2 = 0f
-        n = 0
+    fun getStandardDeviation(): Float {
+        return sqrt(getVariance())
+    }
+
+    fun clean() {
+        m_n = 0
+        m_oldM = 0f
+        m_newM = 0f
+        m_newS = 0f
+        m_oldS = 0f
+
+        mData.clean()
     }
 
     fun getStats(): String {
         return listOf<String>(
-            "Time Var: ${String.format("%.2f", getVariance())}",
             "Time Mean: ${String.format("%.2f", getMean())}",
+            "Time STDDev: ${String.format("%.2f", getStandardDeviation())}",
             "Data Size: ${mData.writeLen} bytes",
             "Throughput ${mData.writeRate / 1024u} kbps"
         ).joinToString("\n")
@@ -102,7 +115,6 @@ class Metrics {
 
     fun start() {
         startTimer()
-        mData.clean()
         clean()
         Timber.v("Connection metrics measurement started")
     }

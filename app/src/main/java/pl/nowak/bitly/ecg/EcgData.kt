@@ -2,7 +2,6 @@ package pl.nowak.bitly.ecg
 
 import pl.nowak.bitly.LeadName
 import pl.nowak.bitly.database.LeadEntry
-import timber.log.Timber
 
 data class EcgData(
     var status: UInt,
@@ -11,6 +10,10 @@ data class EcgData(
     @ExperimentalUnsignedTypes
     companion object {
         fun loadData(data: UIntArray): EcgData {
+
+            //val tmp = data.map { it -> it.convToI32() / 1000 }
+            //Timber.i(tmp.toString())
+
             val timestamp = data[0].toFloat()
             // here is why it was implemented this way
             // https://hackernoon.com/squeezing-performance-from-sqlite-insertions-with-room-d769512f8330
