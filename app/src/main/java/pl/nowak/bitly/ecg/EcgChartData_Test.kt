@@ -21,42 +21,6 @@ data class EcgChartData_Test(
     val size: Int
 ) : XYSeries, PlotListener, OrderedXYSeries {
 
-    class SignalStats {
-        var n = 0
-        var K = 0f
-        var Ex = 0f
-        var Ex2 = 0f
-
-        fun add_variable(x: Float) {
-            if (n == 0)
-                K = x
-            n += 1
-            Ex += x - K
-            Ex2 += (x - K) * (x - K)
-        }
-
-        fun remove_variable(x: Float) {
-            n -= 1
-            Ex -= x - K
-            Ex2 -= (x - K) * (x - K)
-        }
-
-        fun get_mean(): Float {
-            return K + Ex / n
-        }
-
-        fun get_variance(): Float {
-            return (Ex2 - Ex * Ex / n) / (n - 1)
-        }
-
-        fun clean() {
-            K = 0f
-            Ex = 0f
-            Ex2 = 0f
-            n = 0
-        }
-    }
-
     data class Entry(val x: Float, val y: Float)
 
     var stats: SignalStats = SignalStats()
@@ -75,7 +39,6 @@ data class EcgChartData_Test(
             mutex.withLock {
                 lineDataRestricted.clean()
                 seriesCounter = 0
-                stats.clean()
                 cnt = 0
                 Timber.i("Lead: $label was cleared")
             }
@@ -84,10 +47,6 @@ data class EcgChartData_Test(
 
     suspend fun update(x: Float, y: Float) {
         mutex.withLock {
-
-//            if (cnt % 4 != 0) {
-//                return
-//            }
 
             var x_sec = (x + seriesCounter * seriesResolutionCounter) / 1000000f
             val y_scaled = y / (1000000f)
@@ -105,7 +64,6 @@ data class EcgChartData_Test(
             lineDataRestricted.add(entry)
             newVal = true
             cnt++
-            stats.add_variable(y_scaled)
 
             // Timber.i("For: ${label}:Variance is ${stats.get_mean() * 100000} ")
         }

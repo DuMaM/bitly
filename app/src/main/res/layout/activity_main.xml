@@ -70,6 +70,7 @@
             android:layout_marginStart="@dimen/button_spacing"
             android:layout_marginEnd="@dimen/wall_spacing"
             android:importantForAutofill="no"
+            android:onClick="showToast"
             android:text="Stats"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@id/btClean"

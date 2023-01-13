@@ -43,6 +43,49 @@ class Metrics {
     private var mDelta: ULong = 0u
     private var mStart: ULong = 0u
 
+    private var n = 0
+    private var K = 0f
+    private var Ex = 0f
+    private var Ex2 = 0f
+
+    private fun addVariable(x: Float) {
+        if (n == 0)
+            K = x
+        n += 1
+        Ex += x - K
+        Ex2 += (x - K) * (x - K)
+    }
+
+    fun removeVariable(x: Float) {
+        n -= 1
+        Ex -= x - K
+        Ex2 -= (x - K) * (x - K)
+    }
+
+    fun getMean(): Float {
+        return K + Ex / n
+    }
+
+    fun getVariance(): Float {
+        return (Ex2 - Ex * Ex / n) / (n - 1)
+    }
+
+    private fun clean() {
+        K = 0f
+        Ex = 0f
+        Ex2 = 0f
+        n = 0
+    }
+
+    fun getStats(): String {
+        return listOf<String>(
+            "Time Var: ${String.format("%.2f", getVariance())}",
+            "Time Mean: ${String.format("%.2f", getMean())}",
+            "Data Size: ${mData.writeLen} bytes",
+            "Throughput ${mData.writeRate / 1024u} kbps"
+        ).joinToString("\n")
+    }
+
     private fun dumpStats(writeLen: UInt = 0u) {
         Timber.i("[local] got $writeLen bytes (in total ${mData.writeLen}b | ${mData.writeLen / (8u * 1024u)} KB) in ${mDelta / 1000u} ms at ${mData.writeRate / 1024u} kbps")
     }
@@ -53,12 +96,14 @@ class Metrics {
         mData.writeLen += writeLen
         mData.errorCount += berError
         mData.writeRate = ((mData.writeLen.toULong() * 8u * 1000000u) / mDelta).toUInt()
+
         // dumpStats(writeLen)
     }
 
     fun start() {
         startTimer()
         mData.clean()
+        clean()
         Timber.v("Connection metrics measurement started")
     }
 
@@ -71,12 +116,14 @@ class Metrics {
     }
 
     private fun startTimer() {
-        mStart = System.nanoTime().toULong() / 1000u
+        mStart = System.nanoTime().toULong()
         mDelta = 0u
     }
 
     private fun updateTimer() {
-        mDelta = (System.nanoTime().toULong() / 1000u) - mStart
+        mDelta = (System.nanoTime().toULong()) - mStart
+        addVariable(mDelta.toFloat() / 1000)
+        mDelta /= 1000u
     }
 
     private fun stopTimer() {

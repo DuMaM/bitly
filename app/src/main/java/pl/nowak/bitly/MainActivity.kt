@@ -3,6 +3,7 @@ package pl.nowak.bitly
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -43,6 +44,10 @@ class MainActivity : AppCompatActivity() {
         Manifest.permission.BLUETOOTH_SCAN,
         Manifest.permission.BLUETOOTH_CONNECT
     )
+
+    fun showToast(_view: View) {
+        CustomToast(this, viewModel.updateToast()).show()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

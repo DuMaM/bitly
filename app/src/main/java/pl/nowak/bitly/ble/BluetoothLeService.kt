@@ -84,7 +84,7 @@ class BluetoothLeService : Service() {
         AdvertiseSettings.Builder().setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_BALANCED).setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_LOW)
             .setConnectable(true).build()
 
-    private var mMetrics: Metrics = Metrics()
+    var mMetrics: Metrics = Metrics()
 
     /**
      * Service methods

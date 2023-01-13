@@ -44,6 +44,10 @@ class EcgDataRepository(private val database: LeadDatabase, val application: App
 
     }
 
+    fun getStats(): String {
+        return mBluetoothLeService.mMetrics.getStats()
+    }
+
     @RequiresPermission(allOf = ["android.permission.BLUETOOTH_CONNECT", "android.permission.BLUETOOTH_ADVERTISE"])
     fun advertise() {
         if (this::mBluetoothLeService.isInitialized) {
