@@ -1,3 +1,5 @@
+package pl.nowak.bitly
+
 import java.util.concurrent.atomic.AtomicInteger
 
 class CustomCircularArray<T> : Iterable<T>, Cloneable {
@@ -23,10 +25,11 @@ class CustomCircularArray<T> : Iterable<T>, Cloneable {
     private var _size: Int = 0
     private var _tail: Int
 
-
+    @Suppress("unused")
     val tail: Int
         get() = _tail
 
+    @Suppress("unused")
     val head: Int
         get() = if (_size == arr.size) (_tail + 1) % _size else 0
 
@@ -64,7 +67,7 @@ class CustomCircularArray<T> : Iterable<T>, Cloneable {
     /**
      * This array as a list.
      */
-    @Suppress("UNCHECKED_CAST")
+    @Suppress("unused")
     fun toList(): List<T> = iterator().asSequence().toList()
 
     public override fun clone(): CustomCircularArray<T> = CustomCircularArray(this)

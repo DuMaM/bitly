@@ -1,6 +1,5 @@
 package pl.nowak.bitly.ecg
 
-import CustomCircularArray
 import android.graphics.Canvas
 import com.androidplot.Plot
 import com.androidplot.PlotListener
@@ -13,6 +12,7 @@ import com.androidplot.xy.XYSeries
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import pl.nowak.bitly.CustomCircularArray
 import timber.log.Timber
 
 data class EcgChartData_Test(
@@ -55,10 +55,6 @@ data class EcgChartData_Test(
             // add to the end
             // time in ms, value in mv
             val entry = Entry(x_sec, y_scaled)
-//            if (lineDataRestricted.size > size) {
-//                val removed = lineDataRestricted.removeFirst()
-//                stats.remove_variable(removed.y)
-//            }
             lineDataRestricted.add(entry)
             newVal = true
             cnt++
