@@ -9,7 +9,6 @@ class CustomCircularArray<T> : Iterable<T>, Cloneable {
      */
     constructor(bufferSize: Int) {
         this.arr = arrayOfNulls(bufferSize)
-        this._tail = -1
     }
 
     /**
@@ -23,7 +22,7 @@ class CustomCircularArray<T> : Iterable<T>, Cloneable {
 
     private val arr: Array<Any?>
     private var _size: Int = 0
-    private var _tail: Int
+    private var _tail: Int = -1
 
     @Suppress("unused")
     val tail: Int
@@ -41,7 +40,7 @@ class CustomCircularArray<T> : Iterable<T>, Cloneable {
 
     fun clean() {
         _size = 0
-        _tail = 0
+        _tail = -1
     }
 
     /**
