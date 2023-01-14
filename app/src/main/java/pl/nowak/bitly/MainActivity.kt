@@ -11,7 +11,6 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.github.mikephil.charting.utils.Utils
 import pl.nowak.bitly.databinding.ActivityMainBinding
 import pl.nowak.bitly.ecg.EcgChartListAdapterTest
 import pl.nowak.bitly.ecg.EcgChartViewModel
@@ -57,15 +56,7 @@ class MainActivity : AppCompatActivity() {
         binding.lifecycleOwner = this           // allow data to update actions
         setContentView(binding.root)            // show this main activity
         Timber.i("binging set")
-
-        /**
-         * This line is important one, and removes bellow error
-         * `Utils NOT INITIALIZED. You need to call Utils.init(...)
-         * at least once before calling Utils.convertDpToPixel(...).
-         * Otherwise conversion does not take place.
-         */
-        Utils.init(this)
-
+        
         val adapter = EcgChartListAdapterTest()
         ecgChartsView = binding.recycleChartList
         ecgChartsView.adapter = adapter

@@ -89,16 +89,7 @@ dependencies {
     // support libs
     // -> logging
     implementation 'com.jakewharton.timber:timber:5.0.1'
-    // -> graphs
-    // https://github.com/AppDevNext/MPAndroidChart
-    implementation 'com.github.AppDevNext:MPAndroidChart:3.1.0.11'
-    // active fork of
-    // https://github.com/PhilJay/MPAndroidChart
-    //implementation 'com.github.PhilJay:MPAndroidChart:3.1.0'
-
-    // think of this
-    // https://github.com/AnyChart/AnyChart-Android/wiki/Chart-data-update#1-update-chart-data
-
+    // graph
     implementation "com.androidplot:androidplot-core:1.5.10"
 
     // dev

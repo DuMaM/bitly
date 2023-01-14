@@ -2,6 +2,7 @@ package pl.nowak.bitly.stats
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import com.androidplot.xy.XYPlot
 import pl.nowak.bitly.databinding.ActivityStatsBinding
 
 class StatsActivity : AppCompatActivity() {
@@ -10,9 +11,9 @@ class StatsActivity : AppCompatActivity() {
     private lateinit var binding: ActivityStatsBinding
 
     // view charts - small
-    private lateinit var mJitterView: SmallChartView
-    private lateinit var mPingView: SmallChartView
-    private lateinit var mTransferSpeed: SmallChartView
+    private lateinit var mJitterView: XYPlot
+    private lateinit var mPingView: XYPlot
+    private lateinit var mTransferSpeed: XYPlot
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // init activity
@@ -24,8 +25,5 @@ class StatsActivity : AppCompatActivity() {
         mJitterView = binding.chartJitterView
         mPingView = binding.chartPingView
         mTransferSpeed = binding.chartTransferSpeedView
-        mJitterView.default()
-        mPingView.default()
-        mTransferSpeed.default()
     }
 }
