@@ -33,6 +33,10 @@ class EcgChartListAdapterTest : ListAdapter<EcgChartData_Test, EcgChartListAdapt
         fun bind(item: EcgChartData_Test) {
             ecgLabel.text = item.label
 
+//            if (item.size() <= 0) {
+//                ecgChart.clear()
+//            }
+
             if (ecgChart.registry.isEmpty) {
                 // add data series only once
                 val dataFormat = LineAndPointFormatter(Color.RED, null, null, null)

@@ -18,12 +18,12 @@ import timber.log.Timber
 data class EcgChartData_Test(
     val label: String,
     val id: Int,
-    val size: Int
+    val bufferSize: Int
 ) : XYSeries, PlotListener, OrderedXYSeries {
 
     data class Entry(val x: Float, val y: Float)
 
-    private var lineDataRestricted: CustomCircularArray<Entry> = CustomCircularArray(size)
+    private var lineDataRestricted: CustomCircularArray<Entry> = CustomCircularArray(bufferSize)
     private var seriesCounter = 0
     private val seriesResolutionCounter = 16777215
     private var cnt = 0
@@ -70,11 +70,17 @@ data class EcgChartData_Test(
         return lineDataRestricted.size
     }
 
-    override fun getX(p0: Int): Number {
+    override fun getX(p0: Int): Number? {
+        if (lineDataRestricted.size <= 0)
+            return null
+
         return lineDataRestricted[p0].x
     }
 
-    override fun getY(p0: Int): Number {
+    override fun getY(p0: Int): Number? {
+        if (lineDataRestricted.size <= 0)
+            return null
+
         return lineDataRestricted[p0].y
     }
 
