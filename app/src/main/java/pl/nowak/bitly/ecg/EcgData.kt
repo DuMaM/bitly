@@ -7,13 +7,10 @@ data class EcgData(
     var status: UInt,
     var data: List<LeadEntry>
 ) {
-    val LOFF_STATP_MASK = 0xFF000
-    val LOFF_STATN_MASK = 0x00FF0
-    val GPIO_MASK = 0x0000F
-
     @ExperimentalUnsignedTypes
     companion object {
         fun loadData(data: UIntArray): EcgData {
+
             val timestamp = data[0].toFloat()
             // here is why it was implemented this way
             // https://hackernoon.com/squeezing-performance-from-sqlite-insertions-with-room-d769512f8330
@@ -37,7 +34,11 @@ data class EcgData(
 
         @ExperimentalUnsignedTypes
         fun UInt.convToI32(): Int {
-            return ((this shl 8).toInt()) shl 8
+            return if (this >= 0x800000u) {
+                (0xFF000000u or this).toInt()
+            } else {
+                this.toInt()
+            }
         }
 
         @ExperimentalUnsignedTypes

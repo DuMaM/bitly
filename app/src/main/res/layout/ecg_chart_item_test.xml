@@ -14,15 +14,17 @@
             android:layout_marginStart="@dimen/wall_spacing"
             android:layout_marginTop="@dimen/wall_spacing"
             android:layout_marginEnd="@dimen/wall_spacing"
+            android:layout_marginBottom="@dimen/wall_spacing"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             tools:text="Label" />
 
-        <pl.nowak.bitly.ecg.EcgChart
+        <com.androidplot.xy.XYPlot
             android:id="@+id/ecgChart"
+            style="@style/ecg.Light"
             android:layout_width="0dp"
-            android:layout_height="200dp"
+            android:layout_height="450dp"
             android:layout_marginStart="@dimen/wall_spacing"
             android:layout_marginTop="@dimen/wall_spacing"
             android:layout_marginEnd="@dimen/wall_spacing"

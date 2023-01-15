@@ -1,6 +1,7 @@
 package pl.nowak.bitly
 
 import timber.log.Timber
+import kotlin.math.sqrt
 
 
 enum class BleTestType {
@@ -43,6 +44,62 @@ class Metrics {
     private var mDelta: ULong = 0u
     private var mStart: ULong = 0u
 
+    private var m_n = 0
+    private var m_oldM = 0f
+    private var m_newM = 0f
+    private var m_newS = 0f
+    private var m_oldS = 0f
+
+    private fun addVariable(x: Float) {
+        m_n++
+
+        // See Knuth TAOCP vol 2, 3rd edition, page 232
+        if (m_n == 1) {
+            m_oldM = x
+            m_newM = x
+            m_oldS = 0.0f
+        } else {
+            m_newM = m_oldM + (x - m_oldM) / m_n
+            m_newS = m_oldS + (x - m_oldM) * (x - m_newM)
+
+            // set up for next iteration
+            m_oldM = m_newM
+            m_oldS = m_newS
+        }
+    }
+
+    fun getMean(): Float {
+        return if (m_n > 0) m_newM else 0.0f
+    }
+
+    fun getVariance(): Float {
+        return if (m_n > 1) m_newS / (m_n - 1) else 0.0f
+    }
+
+    fun getStandardDeviation(): Float {
+        return sqrt(getVariance())
+    }
+
+    fun clean() {
+        m_n = 0
+        m_oldM = 0f
+        m_newM = 0f
+        m_newS = 0f
+        m_oldS = 0f
+
+        mData.clean()
+    }
+
+    fun getStats(): String {
+        return listOf<String>(
+            "Time Mean: ${String.format("%.6f", getMean())}",
+            "Time Sig: ${String.format("%.6f", getStandardDeviation())}",
+            "Data Size: ${mData.writeLen} bytes",
+            "Throughput ${mData.writeRate / 1024u} kbps"
+        ).joinToString("\n")
+    }
+
+    @Suppress("unused")
     private fun dumpStats(writeLen: UInt = 0u) {
         Timber.i("[local] got $writeLen bytes (in total ${mData.writeLen}b | ${mData.writeLen / (8u * 1024u)} KB) in ${mDelta / 1000u} ms at ${mData.writeRate / 1024u} kbps")
     }
@@ -53,12 +110,13 @@ class Metrics {
         mData.writeLen += writeLen
         mData.errorCount += berError
         mData.writeRate = ((mData.writeLen.toULong() * 8u * 1000000u) / mDelta).toUInt()
+
         // dumpStats(writeLen)
     }
 
     fun start() {
         startTimer()
-        mData.clean()
+        clean()
         Timber.v("Connection metrics measurement started")
     }
 
@@ -66,17 +124,20 @@ class Metrics {
         start()
     }
 
+    @Suppress("unused")
     fun stop() {
         stopTimer()
     }
 
     private fun startTimer() {
-        mStart = System.nanoTime().toULong() / 1000u
+        mStart = System.nanoTime().toULong()
         mDelta = 0u
     }
 
     private fun updateTimer() {
-        mDelta = (System.nanoTime().toULong() / 1000u) - mStart
+        val tmpDelta: ULong = ((System.nanoTime().toULong()) - mStart) / 1000u
+        addVariable((tmpDelta - mDelta).toFloat())
+        mDelta = tmpDelta
     }
 
     private fun stopTimer() {
