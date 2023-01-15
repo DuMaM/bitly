@@ -71,14 +71,14 @@ data class EcgChartData_Test(
     }
 
     override fun getX(p0: Int): Number? {
-        if (lineDataRestricted.size <= 0)
+        if (p0 >= lineDataRestricted.size || p0 < 0)
             return null
 
         return lineDataRestricted[p0].x
     }
 
     override fun getY(p0: Int): Number? {
-        if (lineDataRestricted.size <= 0)
+        if (p0 >= lineDataRestricted.size || p0 < 0)
             return null
 
         return lineDataRestricted[p0].y

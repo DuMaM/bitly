@@ -92,13 +92,14 @@ class Metrics {
 
     fun getStats(): String {
         return listOf<String>(
-            "Time Mean: ${String.format("%.2f", getMean())}",
-            "Time STDDev: ${String.format("%.2f", getStandardDeviation())}",
+            "Time Mean: ${String.format("%.6f", getMean())}",
+            "Time Sig: ${String.format("%.6f", getStandardDeviation())}",
             "Data Size: ${mData.writeLen} bytes",
             "Throughput ${mData.writeRate / 1024u} kbps"
         ).joinToString("\n")
     }
 
+    @Suppress("unused")
     private fun dumpStats(writeLen: UInt = 0u) {
         Timber.i("[local] got $writeLen bytes (in total ${mData.writeLen}b | ${mData.writeLen / (8u * 1024u)} KB) in ${mDelta / 1000u} ms at ${mData.writeRate / 1024u} kbps")
     }
@@ -123,6 +124,7 @@ class Metrics {
         start()
     }
 
+    @Suppress("unused")
     fun stop() {
         stopTimer()
     }
@@ -133,9 +135,9 @@ class Metrics {
     }
 
     private fun updateTimer() {
-        mDelta = (System.nanoTime().toULong()) - mStart
-        addVariable(mDelta.toFloat() / 1000)
-        mDelta /= 1000u
+        val tmpDelta: ULong = ((System.nanoTime().toULong()) - mStart) / 1000u
+        addVariable((tmpDelta - mDelta).toFloat())
+        mDelta = tmpDelta
     }
 
     private fun stopTimer() {

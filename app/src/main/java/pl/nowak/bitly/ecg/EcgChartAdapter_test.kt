@@ -25,7 +25,7 @@ class EcgChartListAdapterTest : ListAdapter<EcgChartData_Test, EcgChartListAdapt
         return EcgChartViewTestHolder.from(parent)
     }
 
-    class EcgChartViewTestHolder private constructor(binding: EcgChartItemTestBinding, val redrawer: Redrawer) :
+    class EcgChartViewTestHolder private constructor(binding: EcgChartItemTestBinding, @Suppress("unused") val redrawer: Redrawer) :
         RecyclerView.ViewHolder(binding.root) {
         private val ecgLabel: TextView = binding.ecgLineLabel
         private val ecgChart: XYPlot = binding.ecgChart
@@ -58,7 +58,7 @@ class EcgChartListAdapterTest : ListAdapter<EcgChartData_Test, EcgChartListAdapt
 
                 // reduce the number of range labels
                 plot.linesPerRangeLabel = 3
-                val redrawer = Redrawer(plot, 10f, true)
+                val redrawer = Redrawer(plot, 5f, true)
                 // PanZoom.attach(plot)
 
                 return EcgChartViewTestHolder(binding, redrawer)
